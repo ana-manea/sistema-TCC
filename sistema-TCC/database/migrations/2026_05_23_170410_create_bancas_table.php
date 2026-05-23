@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('bancas', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('tcc_id')->constrained('tccs')->cascadeOnDelete();
+            $table->foreignId('tcc_id')->unique()->constrained('tccs')->cascadeOnDelete();
             $table->dateTime('data_hora');
             $table->string('local')->nullable();
             $table->enum('status', ['agendada', 'realizada', 'cancelada'])->default('agendada');

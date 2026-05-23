@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('tcc_orientandos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('tcc_d')->constrained('tccs')->cascadeOnDelete();
+            $table->foreignId('tcc_id')->constrained('tccs')->cascadeOnDelete();
             $table->foreignId('orientando_id')->constrained('orientandos')->cascadeOnDelete();
             $table->timestamps();
             $table->unique(['tcc_id', 'orientando_id']);
