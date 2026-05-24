@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('tema');
             $table->text('descricao')->nullable();
             $table->enum('status', ['em_andamento', 'concluido', 'cancelado', 'suspenso'])->default('em_andamento');
-            $table->string('resultado_final')->nullable();
+            $table->enum('resultado_final', ['aprovado', 'aprovado_com_ressalvas', 'reprovado'])->nullable();
             $table->decimal('nota_final', 4, 2)->nullable();
             $table->timestamps();
         });

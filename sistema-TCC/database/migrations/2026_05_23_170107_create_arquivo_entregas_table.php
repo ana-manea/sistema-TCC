@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('arquivos_entrega', function (Blueprint $table) {
             $table->id();
             $table->foreignId('entrega_id')->constrained('entregas')->cascadeOnDelete();
-            $table->foreignId('enviado_por')->constrained('usuarios')->cascadeOnDelete();
+            $table->foreignId('enviado_por')->constrained('users')->cascadeOnDelete();
             $table->string('arquivo_path');
             $table->unsignedInteger('versao')->default(1);
             $table->text('observacao')->nullable();

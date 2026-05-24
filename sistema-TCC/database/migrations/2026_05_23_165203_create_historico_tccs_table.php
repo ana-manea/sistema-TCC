@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('historico_tcc', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tcc_id')->constrained('tccs')->cascadeOnDelete();
-            $table->foreignId('alterado_por')->constrained('usuarios')->cascadeOnDelete();
+            $table->foreignId('alterado_por')->constrained('users')->cascadeOnDelete();
             $table->string('status_anterior')->nullable();
             $table->string('status_novo');
             $table->text('observacao')->nullable();
