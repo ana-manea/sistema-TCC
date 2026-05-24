@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('orientadores', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('usuario_id')->unique()->constrained('usuarios')->cascadeOnDelete();
+            $table->foreignId('user_id')->unique()->constrained('users')->cascadeOnDelete();
             $table->string('area_atuacao');
             $table->text('disponibilidade')->nullable();
             $table->unsignedInteger('max_orientandos')->default(0);

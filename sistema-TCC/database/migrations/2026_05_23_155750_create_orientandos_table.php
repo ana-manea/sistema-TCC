@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('orientandos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('usuario_id')->unique()->constrained('usuarios')->cascadeOnDelete();
+            $table->foreignId('user_id')->unique()->constrained('users')->cascadeOnDelete();
             $table->foreignId('orientador_id')->nullable()->constrained('orientadores')->nullOnDelete();
             $table->string('matricula')->unique();
             $table->string('curso');
