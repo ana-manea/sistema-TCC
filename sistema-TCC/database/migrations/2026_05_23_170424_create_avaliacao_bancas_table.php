@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('banca_id')->constrained('bancas')->cascadeOnDelete();
             $table->foreignId('orientando_id')->constrained('orientandos')->cascadeOnDelete();
-            $table->foreignId('avaliador_id')->constrained('usuarios')->cascadeOnDelete();
+            $table->foreignId('avaliador_id')->constrained('users')->cascadeOnDelete();
             $table->decimal('nota', 4, 2);
             $table->text('parecer')->nullable();
             $table->enum('resultado', ['aprovado', 'aprovado_com_ressalvas', 'reprovado'])->nullable();

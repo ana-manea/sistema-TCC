@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('banca_membros', function (Blueprint $table) {
             $table->id();
             $table->foreignId('banca_id')->constrained('bancas')->cascadeOnDelete();
-            $table->foreignId('usuario_id')->constrained('usuarios')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->enum('papel', ['presidente', 'membro_interno', 'membro_externo']);
             $table->timestamps();
         });
