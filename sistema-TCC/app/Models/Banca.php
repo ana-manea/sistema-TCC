@@ -19,4 +19,15 @@ class Banca extends Model
         'resultado_final',
         'nota_final'
     ];
+
+    public function avaliacoes()
+    {
+        // Uma banca tem muitas avaliações
+        return $this->hasMany(AvaliacaoBanca::class, 'banca_id');
+    }
+
+    public function tcc() //dizer que tem relação com o tcc
+    {
+        return $this->belongsTo(Tcc::class, 'tcc_id');
+    }
 }
