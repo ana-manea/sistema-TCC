@@ -6,5 +6,23 @@ use Illuminate\Database\Eloquent\Model;
 
 class Orientando extends Model
 {
-    //
+    protected $table = 'orientandos';
+
+    // infos tabela
+    protected $fillable = ['user_id', 'orientador_id', 'matricula', 'curso', 'semestre'];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function orientador()
+    {
+        return $this->belongsTo(Orientador::class, 'orientador_id');
+    }
+
+    public function solicitacoes()
+    {
+        return $this->hasMany(SolicitacaoOrientador::class, 'orientando_id');
+    }
 }
