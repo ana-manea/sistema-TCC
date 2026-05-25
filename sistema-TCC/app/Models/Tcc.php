@@ -11,4 +11,9 @@ class Tcc extends Model
     protected $casts = [
         'data' => 'datetime'
     ];
+
+    public function orientandos() //dizer que tem relação n:n com orientandos
+    {
+        return $this->belongsToMany(Orientando::class, 'tcc_orientandos', 'tcc_id', 'orientando_id');
+    }
 }

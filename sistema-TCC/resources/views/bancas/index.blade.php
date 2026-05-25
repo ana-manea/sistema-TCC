@@ -38,7 +38,9 @@
                         <td>
                             <a href="{{ route('bancas.edit', $banca->id) }}">Editar</a>
                             
-                            <form action="{{ route('bancas.destroy', $banca->id) }}" method="POST">
+                            | <a href="{{ route('avaliacoes.criar', $banca->id) }}">Avaliar Banca</a> |
+                            
+                            <form action="{{ route('bancas.destroy', $banca->id) }}" method="POST" style="display:inline;">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" onclick="return confirm('Deseja mesmo excluir esta banca?')">Excluir</button>
