@@ -21,32 +21,54 @@ class AvaliacaoBancaController extends Controller
     // 2. Salva a nota e o parecer no banco de dados
     public function store(Request $request, $banca_id)
     {
-        // 1. Validação dos dados do formulário
+        // 1. Validação dos dados de texto do formulário
         $request->validate([
             'nota' => 'required|numeric|min:0|max:10',
             'parecer' => 'required|string',
+        ], [
+            'nota.required' => 'A nota é obrigatória.',
+            'nota.numeric' => 'A nota deve ser um número.',
+            'nota.min' => 'A nota mínima é 0.',
+            'nota.max' => 'A nota máxima é 10.',
+            'parecer.required' => 'O parecer descritivo é obrigatório.',
         ]);
 
-        // 2. Busca a banca e carrega o TCC com os orientandos vinculados a ele
-        $banca = Banca::with('tcc.orientandos')->findOrFail($banca_id);
+        // 2. Busca a banca e carrega os relacionamentos necessários
+        $banca = Banca::with(['tcc.orientandos', 'bancaMembros'])->findOrFail($banca_id);
+
+        // Garante que o professor logado realmente faz parte desta banca
+        $professorLogadoId = 3;
+        $fazParteDaBanca = $banca->bancaMembros->contains('usuario_id', $professorLogadoId);
+
+        if (!$fazParteDaBanca) {
+            return redirect()->back()->withErrors(['erro' => 'Você não está cadastrado como membro avaliador desta banca.']);
+        }
 
         // 3. Pega o ID do primeiro orientando (aluno) dono deste TCC através da pivot
-        // O Laravel busca na relação: banca -> tcc -> orientandos (da tabela pivot tcc_orientandos)
         $orientando = $banca->tcc->orientandos->first();
 
-        // Caso por algum erro de teste o TCC não tenha aluno vinculado na pivot
         if (!$orientando) {
             return redirect()->back()->withErrors(['erro' => 'Este TCC não possui nenhum aluno (orientando) vinculado a ele.']);
         }
 
-        // 4. Cria o registro com os IDs perfeitamente alinhados ao seu banco físico
+        // Garante que o professor já não enviou uma avaliação para este mesmo aluno nesta banca
+        $jaAvaliou = AvaliacaoBanca::where('banca_id', $banca->id)
+                                   ->where('avaliador_id', $professorLogadoId)
+                                   ->where('orientando_id', $orientando->id)
+                                   ->exists();
+
+        if ($jaAvaliou) {
+            return redirect()->route('bancas.index')->with('erro', 'Você já registrou a sua avaliação para este orientando nesta banca.');
+        }
+
+        // 4. Cria o registro com os dados totalmente validados 
         AvaliacaoBanca::create([
             'banca_id'      => $banca->id,
-            'avaliador_id'  => auth()->id(),   // ID do professor logado no sistema
-            'orientando_id' => $orientando->id, // O ID vindo da tabela 'orientandos' que descobrimos automaticamente
+            'avaliador_id'  => $professorLogadoId,
+            'orientando_id' => $orientando->id,
             'nota'          => $request->nota,
             'parecer'       => $request->parecer,
-            'resultado'     => null,            // Aceita NULL por padrão, preenchido pelo presidente depois
+            'resultado'     => null, // Preenchido pelo presidente depois
         ]);
 
         return redirect()->route('bancas.index')->with('sucesso', 'Avaliação registrada com sucesso!');

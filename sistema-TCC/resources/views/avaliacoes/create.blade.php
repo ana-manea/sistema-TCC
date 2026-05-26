@@ -9,7 +9,11 @@
 
     <h1>Avaliação da Banca — TCC Nº {{ $banca->tcc_id }}</h1>
     <hr>
-
+    @if ($errors->any())
+    @foreach ($errors->all() as $error)
+        {{ $error }}<br>
+    @endforeach
+    @endif
     <form action="{{ route('avaliacoes.store', $banca->id) }}" method="POST">
         @csrf
 

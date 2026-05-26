@@ -18,6 +18,9 @@
     @if($bancas->isEmpty())
         <p>Nenhuma banca cadastrada até o momento.</p>
     @else
+    @if (session('erro'))
+    {{ session('erro') }}<br>
+    @endif
         <table border="1">
             <thead>
                 <tr>
