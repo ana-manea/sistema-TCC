@@ -8,29 +8,47 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable
 {
     use Notifiable;
-    
-    // CRUD inicial - usuários
     protected $fillable = ['name', 'email', 'password', 'funcao', 'avatar'];
 
-    // senha
+    protected $hidden = [
+        'password',
+        'remenber_token'
+    ];
 
-    // verificação email/senha
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+    ];
 
-    // usuário -> orientador
+    public function orientador()
+    {
+        return $this->hasOne(Orientador::class, 'user_id');
+    }
 
-    // usuário -> orientando
-
-    // arquivos enviados
+    public function orientando()
+    {
+        return $this->hasOne(Orientando::class, 'user_id');
+    }
+    
     public function arquivosEnviados()
     {
         return $this->hasMany(ArquivoEntrega::class, 'enviado_por');
     }
 
-    // membros da banca
+    public function bancasComoMembro()
+    {
+        return $this->hasMany(BancaMembro::class, 'user_id');
+    }
 
-    // avaliações
+    public function avaliacoes()
+    {
+        return $this->hasMany(AvaliacaoBanca::class, 'avaliador_id');
+    }
 
-    // histórico
+    public function historicosAlterados()
+    {
+        return $this->hasMany(HistoricoTcc::class, 'alterado_por');
+    }
 
 
 }
