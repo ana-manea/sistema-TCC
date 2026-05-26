@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Banca;
+use App\Models\AvaliacaoBanca;
 
 class BancaController extends Controller
 {
@@ -14,8 +15,11 @@ class BancaController extends Controller
         // Busca todos os registros da tabela 'bancas'
         $bancas = Banca::all();
         
-        // Retorna a tela de listagem enviando os dados das bancas
-        return view('bancas.index', compact('bancas'));
+        // ID do usuário logado que estamos usando para testar
+        $usuarioLogadoId = 3; 
+    
+        // Retorna a view enviando as bancas e o ID do usuário de teste
+        return view('bancas.index', compact('bancas', 'usuarioLogadoId'));
     }
 
     // Exibe o formulário para agendar uma nova banca
@@ -84,4 +88,110 @@ class BancaController extends Controller
         // Redireciona para a listagem avisando que foi excluída
         return redirect()->route('bancas.index')->with('sucesso', 'Banca excluída com sucesso!');
     }
+
+     //Abre a tela exclusiva de fechamento para o Presidente da banca
+    public function telaFechamento(Banca $banca)
+    {
+        $usuarioLogadoId = 3; // Simulação do usuário de teste
+
+        // [PROTEÇÃO 3] Garante que só o presidente acessa a tela
+        $eOPresidente = \DB::table('banca_membros')
+            ->where('banca_id', $banca->id)
+            ->where('usuario_id', $usuarioLogadoId)
+            ->where('papel', 'presidente')
+            ->exists();
+
+        if (!$eOPresidente) {
+            return redirect()->route('bancas.index')->with('erro', 'Acesso negado. Apenas o Presidente da banca pode acessar esta tela.');
+        }
+
+        // Busca as notas para mostrar o resumo na tela antes de fechar
+        $notas = \DB::table('avaliacoes_banca')
+                    ->where('banca_id', $banca->id)
+                    ->pluck('nota');
+
+        $mediaCalculada = $notas->isEmpty() ? 0 : $notas->avg();
+
+        return view('bancas.fechamento', compact('banca', 'mediaCalculada', 'notas'));
+    }
+
+    
+     //Processa o salvamento do fechamento no banco de dados
+     
+    public function fecharBanca(Request $request, Banca $banca)
+    {
+        $usuarioLogadoId = 3; // Simulação do usuário de teste
+
+        // [PROTEÇÃO 3] Garante no backend que quem enviou o form é o presidente
+        $eOPresidente = \DB::table('banca_membros')
+            ->where('banca_id', $banca->id)
+            ->where('usuario_id', $usuarioLogadoId)
+            ->where('papel', 'presidente')
+            ->exists();
+
+        if (!$eOPresidente) {
+            return redirect()->route('bancas.index')->with('erro', 'Ação não permitida.');
+        }
+
+        // Valida os dados da conclusão
+        $request->validate([
+            'resultado_final' => 'required|in:aprovado,aprovado_com_ressalvas,reprovado',
+            'parecer_final'   => 'required|string|max:1000',
+        ], [
+            'resultado_final.required' => 'O veredito final é obrigatório.',
+            'parecer_final.required'   => 'O parecer/ata final é obrigatório.',
+        ]);
+
+        // Busca as notas para consolidar a média
+        $notas = \DB::table('avaliacoes_banca')->where('banca_id', $banca->id)->pluck('nota');
+        
+        if ($notas->isEmpty()) {
+            return redirect()->back()->with('erro', 'Não é possível fechar a banca sem notas lançadas.');
+        }
+
+        // Atualiza a banca de forma definitiva
+        $banca->update([
+            'nota_final'      => $notas->avg(),
+            'resultado_final' => $request->resultado_final,
+            'parecer_final'   => $request->parecer_final,
+            'status'          => 'realizada',
+        ]);
+
+        return redirect()->route('bancas.index')->with('sucesso', 'Banca concluída e encerrada com sucesso!');
+    }
+
+    //exibe o resultado final da banca
+    public function mostrarAta(Banca $banca)
+    {
+        //Garante que a banca realmente já foi realizada
+        if ($banca->status != 'realizada') {
+            return redirect()->route('bancas.index')->with('erro', 'Esta banca ainda não possui uma ata gerada.');
+        }
+
+        // Pega o ID e o objeto do usuário logado dinamicamente via autenticação do Laravel
+        $usuarioLogadoId = auth()->id();
+        $usuarioLogado = auth()->user();
+
+        // 2. Checa se o usuário logado é um dos membros da banca (presidente ou membros)
+        $eMembroDaBanca = \DB::table('banca_membros')
+            ->where('banca_id', $banca->id)
+            ->where('usuario_id', $usuarioLogadoId)
+            ->exists();
+
+        //Checa se o usuário logado é o orientando dono do TCC dessa banca
+        $eOOrientando = ($usuarioLogado && $usuarioLogado->funcao === 'orientando' && $banca->tcc_id == $usuarioLogadoId);
+
+        // Se não for membro da banca E não for o aluno dono do TCC, barra o acesso
+        if (!$eMembroDaBanca && !$eOOrientando) {
+            return redirect()->route('bancas.index')->with('erro', 'Acesso negado. Você não tem permissão para visualizar esta ata.');
+        }
+
+        // Busca os membros da banca para listar na ata
+        $membros = \DB::table('banca_membros')
+            ->where('banca_id', $banca->id)
+            ->get();
+
+        return view('bancas.ata', compact('banca', 'membros'));
+    }
+    
 }
