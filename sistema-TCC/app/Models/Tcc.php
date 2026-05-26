@@ -6,17 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Tcc extends Model
 {
-<<<<<<< HEAD
     protected $table = 'tccs';
-
-    protected $fillable = [
-        'orientador_id',
-        'tema',
-        'descricao',
-        'status',
-        'resultado_final',
-        'nota_final',
-    ];
+    
+    protected $fillable = ['id', 'orientador_id', 'tema', 'descricao', 'status', 'resultado_final', 'nota_final', 'created_at', 'updated_at'];
+    
 
     public function orientador()
     {
@@ -37,9 +30,7 @@ class Tcc extends Model
     {
         return $this->hasOne(Banca::class, 'tcc_id');
     }
-}
-=======
-    protected $fillable = ['id', 'orientador_id', 'tema', 'descricao', 'status', 'resultado_final', 'nota_final', 'created_at', 'updated_at'];
+
     
     protected $casts = [
         'data' => 'datetime'
@@ -50,4 +41,3 @@ class Tcc extends Model
         return $this->belongsToMany(Orientando::class, 'tcc_orientandos', 'tcc_id', 'orientando_id');
     }
 }
->>>>>>> dev
