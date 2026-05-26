@@ -37,7 +37,7 @@ class AvaliacaoBancaController extends Controller
         $banca = Banca::with(['tcc.orientandos', 'bancaMembros'])->findOrFail($banca_id);
 
         // Garante que o professor logado realmente faz parte desta banca
-        $professorLogadoId = 3;
+        $professorLogadoId = auth()->id();
         $fazParteDaBanca = $banca->bancaMembros->contains('usuario_id', $professorLogadoId);
 
         if (!$fazParteDaBanca) {

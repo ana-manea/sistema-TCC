@@ -16,7 +16,7 @@ class BancaController extends Controller
         $bancas = Banca::all();
         
         // ID do usuário logado que estamos usando para testar
-        $usuarioLogadoId = 3; 
+        $usuarioLogadoId = auth()->id(); 
     
         // Retorna a view enviando as bancas e o ID do usuário de teste
         return view('bancas.index', compact('bancas', 'usuarioLogadoId'));
