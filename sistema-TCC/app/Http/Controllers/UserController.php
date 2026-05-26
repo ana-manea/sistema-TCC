@@ -10,7 +10,6 @@ class UserController extends Controller
     public function index()
     {
         $users = User::latest()->get();
-
         return view('users.index', compact('users'));
     }
 
@@ -22,16 +21,16 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $dados = $request->validate([
-            'name'     => ['required|string|max:255'],
-            'email'    => ['required|email|max:255'],
-            'password' => ['nullable|min:6'],
-            'funcao'   => ['nullable|string'],
-            'avatar'   => ['nullable|string'],
+            'name'     => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'email','max:255', 'unique:users,email'],
+            'password' => ['required','min:6'],
+            'funcao'   => ['required','in:admin,orientador,orientando,membro_banca'],
+            'avatar'   => ['nullable','regex:/^#[0-9A-Fa-f]{6}$/'],
         ]);
        
-        if (!empty($dados['password'])) {
-            $dados['password'] = bcrypt($dados['password']);
-        }
+        $dados['password'] = bcrypt($dados['password']);
+
+        $dados['avatar'] = $dados['avatar'] ?? '#b20000';
 
         User::create($dados);
 
@@ -53,11 +52,11 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $dados = $request->validate([
-            'name'     => ['required|string|max:255'],
-            'email'    => ['required|email|max:255'],
-            'password' => ['nullable|min:6'],
-            'funcao'   => ['nullable|string'],
-            'avatar'   => ['nullable|string'],
+            'name'     => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'email','max:255', 'unique:users,email' . $user->id],
+            'password' => ['required','min:6'],
+            'funcao'   => ['required','in:admin,orientador,orientando,membro_banca'],
+            'avatar'   => ['nullable','regex:/^#[0-9A-Fa-f]{6}$/'],
         ]);
         
         if (!empty($dados['password'])) {
@@ -65,6 +64,8 @@ class UserController extends Controller
         } else {
             unset($dados['password']);
         }
+
+        $dados['avatar'] = $dados['avatar'] ?? '#b20000';
 
         $user->update($dados);
 
