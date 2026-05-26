@@ -16,7 +16,9 @@ return new class extends Migration
             $table->enum('status', ['em_andamento', 'concluido', 'cancelado', 'suspenso'])->default('em_andamento');
             $table->enum('resultado_final', ['aprovado', 'aprovado_com_ressalvas', 'reprovado'])->nullable();
             $table->decimal('nota_final', 4, 2)->nullable();
-            $table->timestamps();
+            $table->timestamp('created_at')->date('d/m/Y H:i:s');
+            $table->timestamp('updated_at')->nullable();
+            //$table->timestamps();
         });
     }
 

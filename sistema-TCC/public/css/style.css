@@ -1,0 +1,36 @@
+body {
+    padding-top: 4.5rem;
+}
+
+.form-error {
+    color: #b02a37;
+    font-size: .875rem;
+}
+
+.avatar-user {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 32px;
+    font-weight: 700;
+    text-transform: uppercase;
+    user-select: none;
+}
+
+.avatar-user-sm {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    user-select: none;
+}
