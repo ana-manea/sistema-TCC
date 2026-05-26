@@ -30,4 +30,9 @@ class Banca extends Model
     {
         return $this->belongsTo(Tcc::class, 'tcc_id');
     }
+
+    public function bancaMembros()
+    {
+        return $this->hasMany(BancaMembro::class, 'banca_id');
+    }
 }

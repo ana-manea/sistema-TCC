@@ -28,18 +28,22 @@ class BancaController extends Controller
     // Salva os dados da nova banca no banco de dados
     public function store(Request $request)
     {
-        // Valida se os campos obrigatórios do agendamento foram preenchidos corretamente
+        // Validações para evitar Erro na criação
         $request->validate([
-            'tcc_id' => 'required|integer',
-            'data_hora' => 'required',
-            'local' => 'required|string|max:255',
-            'status' => 'required|in:agendada,realizada,cancelada',
+            'tcc_id'    => 'required|integer|exists:tccs,id|unique:bancas,tcc_id',
+            'data_hora' => 'required|date',
+            'local'     => 'required|string|max:255',
+            'status'    => 'required|in:agendada,realizada,cancelada',
+        ], [
+            // Mensagens personalizadas para o usuário 
+            'tcc_id.exists' => 'O TCC selecionado não existe no sistema.',
+            'tcc_id.unique' => 'Este TCC já possui uma banca agendada.',
+            'data_hora.date' => 'Insira uma data e hora válidas.',
         ]);
 
         // Cria o registro na tabela 'bancas' com os dados validados
         Banca::create($request->all());
 
-        // Redireciona para a listagem com uma mensagem de sucesso
         return redirect()->route('bancas.index')->with('sucesso', 'Banca agendada com sucesso!');
     }
 
@@ -53,18 +57,21 @@ class BancaController extends Controller
     // Atualiza os dados logísticos de uma banca existente
     public function update(Request $request, Banca $banca)
     {
-        // Valida as alterações feitas nos campos de agendamento
+        // Validações robustas ignorando a própria banca que está sendo editada
         $request->validate([
-            'tcc_id' => 'required|integer',
-            'data_hora' => 'required',
-            'local' => 'required|string|max:255',
-            'status' => 'required|in:agendada,realizada,cancelada',
+            'tcc_id'    => 'required|integer|exists:tccs,id|unique:bancas,tcc_id,' . $banca->id,
+            'data_hora' => 'required|date',
+            'local'     => 'required|string|max:255',
+            'status'    => 'required|in:agendada,realizada,cancelada',
+        ], [
+            'tcc_id.exists' => 'O TCC selecionado não existe no sistema.',
+            'tcc_id.unique' => 'Este TCC já está vinculado a outra banca.',
+            'data_hora.date' => 'Insira uma data e hora válidas.',
         ]);
 
         // Atualiza a linha correspondente no banco de dados
         $banca->update($request->all());
 
-        // Redireciona para a listagem com a mensagem de alteração salva
         return redirect()->route('bancas.index')->with('sucesso', 'Banca atualizada com sucesso!');
     }
 
