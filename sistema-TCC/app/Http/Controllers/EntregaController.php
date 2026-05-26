@@ -3,64 +3,74 @@
 namespace App\Http\Controllers;
 
 use App\Models\Entrega;
+use App\Models\Tcc;
 use Illuminate\Http\Request;
 
 class EntregaController extends Controller
 {
     public function index()
     {
-        $entregas = Entrega::latest()->get();
+        $entregas = Entrega::with('tcc')->latest()->get();
 
         return view('entregas.index', compact('entregas'));
     }
 
     public function create()
     {
-        return view('entregas.create');
+        // Carrega os TCCs para o select do formulário
+        $tccs = Tcc::where('status', 'em_andamento')->get();
+
+        return view('entregas.create', compact('tccs'));
     }
 
     public function store(Request $request)
     {
-        $dados = $request->validate([
-            'tcc_id'    => ['nullable|integer'],
-            'titulo'    => ['required|string|max:255'],
-            'descricao' => ['nullable|string'],
-            'prazo'     => ['nullable|date'],
-            'status'    => ['nullable|string'],
+        // tcc_id e prazo são NOT NULL na migration — ambos obrigatórios
+        $request->validate([
+            'tcc_id'    => 'required|integer|exists:tccs,id',
+            'titulo'    => 'required|string|max:255',
+            'descricao' => 'nullable|string',
+            'prazo'     => 'required|date',
+            'status'    => 'required|in:pendente,entregue,validado,rejeitado,atrasado',
         ]);
 
-        Entrega::create($dados);
+        Entrega::create($request->all());
 
         return redirect()
             ->route('entregas.index')
-            ->with('sucesso', 'Registro cadastrado com sucesso!');
+            ->with('sucesso', 'Entrega cadastrada com sucesso!');
     }
 
     public function show(Entrega $entrega)
     {
+        // Carrega o TCC e os arquivos enviados nessa entrega
+        $entrega->load('tcc', 'arquivos.usuarioEnvio');
+
         return view('entregas.show', compact('entrega'));
     }
 
     public function edit(Entrega $entrega)
     {
-        return view('entregas.edit', compact('entrega'));
+        $tccs = Tcc::all();
+
+        return view('entregas.edit', compact('entrega', 'tccs'));
     }
 
     public function update(Request $request, Entrega $entrega)
     {
-        $dados = $request->validate([
-            'tcc_id'    => ['nullable|integer'],
-            'titulo'    => ['required|string|max:255'],
-            'descricao' => ['nullable|string'],
-            'prazo'     => ['nullable|date'],
-            'status'    => ['nullable|string'],
+        $request->validate([
+            'tcc_id'    => 'required|integer|exists:tccs,id',
+            'titulo'    => 'required|string|max:255',
+            'descricao' => 'nullable|string',
+            'prazo'     => 'required|date',
+            'status'    => 'required|in:pendente,entregue,validado,rejeitado,atrasado',
         ]);
 
-        $entrega->update($dados);
+        $entrega->update($request->all());
 
         return redirect()
             ->route('entregas.index')
-            ->with('sucesso', 'Registro atualizado com sucesso!');
+            ->with('sucesso', 'Entrega atualizada com sucesso!');
     }
 
     public function destroy(Entrega $entrega)
@@ -69,6 +79,6 @@ class EntregaController extends Controller
 
         return redirect()
             ->route('entregas.index')
-            ->with('sucesso', 'Registro removido com sucesso!');
+            ->with('sucesso', 'Entrega excluída com sucesso!');
     }
 }
