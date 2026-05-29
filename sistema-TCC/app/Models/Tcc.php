@@ -36,8 +36,9 @@ class Tcc extends Model
         'data' => 'datetime'
     ];
 
-    public function orientandos() //dizer que tem relação n:n com orientandos
+    public function orientandos()
     {
-        return $this->belongsToMany(Orientando::class, 'tcc_orientandos', 'tcc_id', 'orientando_id');
+        return $this->belongsToMany(Orientando::class, 'tcc_orientandos', 'tcc_id', 'orientando_id')
+            ->withTimestamps();
     }
 }

@@ -21,6 +21,12 @@ class Orientando extends Model
         return $this->belongsTo(Orientador::class, 'orientador_id');
     }
 
+    public function tccs()
+    {
+        return $this->belongsToMany(Tcc::class, 'tcc_orientandos', 'orientando_id', 'tcc_id')
+            ->withTimestamps();
+    }
+
     public function solicitacoes()
     {
         return $this->hasMany(SolicitacaoOrientador::class, 'orientando_id');
