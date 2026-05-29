@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Orientador;
 use App\Models\Orientando;
 use Illuminate\Http\Request;
 
@@ -27,9 +28,14 @@ class UserController extends Controller
             'password' => ['required','min:6'],
             'funcao'   => ['required','in:admin,orientador,orientando,membro_banca'],
             'avatar'   => ['nullable','regex:/^#[0-9A-Fa-f]{6}$/'],
-            'orientando.matricula' => ['required_if:funcao,orientando','string','max:255','unique:orientandos,matricula'],
-            'orientando.curso' => ['required_if:funcao,orientando','string','max:255'],
+            // Validações do Orientando
+            'orientando.matricula' => ['nullable','required_if:funcao,orientando','string','max:255','unique:orientandos,matricula'],
+            'orientando.curso' => ['nullable','required_if:funcao,orientando','string','max:255'],
             'orientando.semestre' => ['nullable','integer','min:1'],
+            // Validações do Orientador
+            'orientador.area_atuacao'    => ['nullable','required_if:funcao,orientador', 'string', 'max:255'],
+            'orientador.disponibilidade' => ['nullable','required_if:funcao,orientador', 'string'],
+            'orientador.max_orientandos' => ['nullable','required_if:funcao,orientador', 'integer', 'min:1', 'max:8'],
         ]);
        
         $dados['password'] = bcrypt($dados['password']);
@@ -47,6 +53,17 @@ class UserController extends Controller
                 'matricula' => $orient['matricula'] ?? null,
                 'curso' => $orient['curso'] ?? null,
                 'semestre' => $orient['semestre'] ?? null,
+            ]);
+        }
+
+        // criar orientador
+        if ($dados['funcao'] === 'orientador') {
+            $prof = $request->input('orientador', []);
+            Orientador::create([
+                'user_id'         => $user->id,
+                'area_atuacao'    => $prof['area_atuacao'] ?? null,
+                'disponibilidade' => $prof['disponibilidade'] ?? null,
+                'max_orientandos' => $prof['max_orientandos'] ?? 8, // Usa o limite máximo padrão se vazio
             ]);
         }
 
@@ -73,9 +90,14 @@ class UserController extends Controller
             'password' => ['required','min:6'],
             'funcao'   => ['required','in:admin,orientador,orientando,membro_banca'],
             'avatar'   => ['nullable','regex:/^#[0-9A-Fa-f]{6}$/'],
-            'orientando.matricula' => ['required_if:funcao,orientando','string','max:255'],
-            'orientando.curso' => ['required_if:funcao,orientando','string','max:255'],
+
+            'orientando.matricula' => ['nullable','required_if:funcao,orientando','string','max:255'],
+            'orientando.curso' => ['nullable','required_if:funcao,orientando','string','max:255'],
             'orientando.semestre' => ['nullable','integer','min:1'],
+
+            'orientador.area_atuacao'    => ['nullable','required_if:funcao,orientador', 'string', 'max:255'],
+            'orientador.disponibilidade' => ['nullable','required_if:funcao,orientador', 'string'],
+            'orientador.max_orientandos' => ['nullable','required_if:funcao,orientador', 'integer', 'min:1', 'max:8'],
         ]);
         
         if (!empty($dados['password'])) {
@@ -110,6 +132,32 @@ class UserController extends Controller
             // se deixou de ser orientando, remove o registro
             if ($user->orientando) {
                 $user->orientando->delete();
+            }
+        }
+
+        //sincronizar orientador
+        if ($dados['funcao'] === 'orientador') {
+            $prof = $request->input('orientador', []);
+            if ($user->orientador) {
+                // Se já existir o perfil, atualiza
+                $user->orientador->update([
+                    'area_atuacao'    => $prof['area_atuacao'] ?? $user->orientador->area_atuacao,
+                    'disponibilidade' => $prof['disponibilidade'] ?? $user->orientador->disponibilidade,
+                    'max_orientandos' => $prof['max_orientandos'] ?? $user->orientador->max_orientandos,
+                ]);
+            } else {
+                // Se mudou a função de outro tipo para Orientador, cria o registro do zero
+                Orientador::create([
+                    'user_id'         => $user->id,
+                    'area_atuacao'    => $prof['area_atuacao'] ?? null,
+                    'disponibilidade' => $prof['disponibilidade'] ?? null,
+                    'max_orientandos' => $prof['max_orientandos'] ?? 8,
+                ]);
+            }
+        } else {
+            // Se o usuário deixou de ser orientador, remove o registro antigo do banco
+            if ($user->orientador) {
+                $user->orientador->delete();
             }
         }
 

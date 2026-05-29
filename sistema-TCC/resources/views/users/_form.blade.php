@@ -82,7 +82,7 @@
 
     <div class="mb-3">
         <label class="form-label">Máximo de Orientandos</label>
-        <input type="number" name="orientador[max_orientandos]" class="form-control @error('orientador.max_orientandos') is-invalid @enderror" min="0" value="{{ old('orientador.max_orientandos', $user->orientador->max_orientandos ?? '') }}">
+        <input type="number" name="orientador[max_orientandos]" class="form-control @error('orientador.max_orientandos') is-invalid @enderror" value="{{ old('orientador.max_orientandos', $user->orientador->max_orientandos ?? '') }} min="1" max="8"  onkeydown="return false;">
         @error('orientador.max_orientandos') <div class="form-error">{{ $message }}</div> @enderror
     </div>
 </div>

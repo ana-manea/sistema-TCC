@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AvaliacaoBancaController;
 use App\Http\Controllers\BancaController;
+use App\Http\Controllers\OrientadorController;
 use App\Http\Controllers\OrientandoController;
 use App\Http\Controllers\TccController;
 use App\Http\Controllers\UserController;
@@ -42,4 +43,7 @@ Route::get('/bancas/{banca}/ata', [BancaController::class, 'mostrarAta'])->name(
 Route::resource('users', UserController::class);
 
 Route::resource('orientandos', OrientandoController::class)->except(['create','store']);
+Route::resource('orientadores', OrientadorController::class)
+    ->parameters(['orientadores' => 'orientador'])
+    ->except(['create', 'store']);
 Route::resource('solicitacoes_orientador', SolicitacaoOrientadorController::class);
