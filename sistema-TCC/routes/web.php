@@ -1,14 +1,20 @@
 <?php
 
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\TccController;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\BancaController;
 use App\Http\Controllers\AvaliacaoBancaController;
+use App\Http\Controllers\BancaController;
+use App\Http\Controllers\OrientandoController;
+use App\Http\Controllers\TccController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\SolicitacaoOrientadorController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->name('dashboard');
 
 Route::resource('tccs', TccController::class);
 
@@ -34,3 +40,6 @@ Route::get('/bancas/{banca}/ata', [BancaController::class, 'mostrarAta'])->name(
 
 
 Route::resource('users', UserController::class);
+
+Route::resource('orientandos', OrientandoController::class)->except(['create','store']);
+Route::resource('solicitacoes_orientador', SolicitacaoOrientadorController::class);
