@@ -7,6 +7,7 @@ use App\Http\Controllers\OrientandoController;
 use App\Http\Controllers\TccController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SolicitacaoOrientadorController;
+use App\Models\Orientador;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -43,7 +44,57 @@ Route::get('/bancas/{banca}/ata', [BancaController::class, 'mostrarAta'])->name(
 Route::resource('users', UserController::class);
 
 Route::resource('orientandos', OrientandoController::class)->except(['create','store']);
-Route::resource('orientadores', OrientadorController::class)
-    ->parameters(['orientadores' => 'orientador'])
-    ->except(['create', 'store']);
-Route::resource('solicitacoes_orientador', SolicitacaoOrientadorController::class);
+Route::controller(OrientadorController::class)->group(function () {
+
+    // pega automaticamente o primeiro orientador
+    Route::get('/orientador', function () {
+
+        $orientador = Orientador::first();
+
+        return redirect()->route(
+            'orientador.dashboard',
+            $orientador->id
+        );
+
+    });
+
+    // dashboard
+    Route::get('/orientador/{orientador}/dashboard', 'dashboard')
+        ->name('orientador.dashboard');
+
+    // meus orientandos
+    Route::get('/orientador/{orientador}/meus-orientandos', 'meusOrientandos')
+        ->name('orientador.meus_orientandos');
+});
+
+Route::resource('orientadores', OrientadorController::class)->parameters(['orientadores' => 'orientador']);;
+Route::controller(SolicitacaoOrientadorController::class)->group(function () {
+
+    // Professor responder solicitação
+    Route::put(
+        '/solicitacoes_orientador/{solicitacaoOrientador}/responder',
+        'responder'
+    )->name('solicitacoes_orientador.responder');
+
+    // ALUNO
+    Route::get(
+        '/solicitacoes_orientando',
+        'indexOrientando'
+    )->name('solicitacoes_orientando.index');
+
+    Route::get(
+        '/solicitacoes_orientando/create',
+        'createOrientando'
+    )->name('solicitacoes_orientando.create');
+
+    // PROFESSOR
+    Route::get(
+        '/orientador/{orientador}/solicitacoes',
+        'index'
+    )->name('solicitacoes_orientador.index');
+
+    Route::post(
+        '/solicitacoes_orientador',
+        'store'
+    )->name('solicitacoes_orientador.store');
+});
