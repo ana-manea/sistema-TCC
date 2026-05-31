@@ -1,119 +1,141 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fechamento da Banca</title>
-</head>
-<body>
+@extends('layouts.app')
 
-    <h1>Fechamento da Banca — {{ $banca->tcc->tema ?? 'TCC #' . $banca->tcc_id }}</h1>
-    <a href="{{ route('bancas.show', $banca) }}">← Voltar para a banca</a>
-    <hr>
+@section('title', 'Fechamento da Banca')
 
-    @if(session('erro'))
-        <p style="color: red;"><strong>{{ session('erro') }}</strong></p>
-    @endif
+@section('content')
+    <div class="row">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-header">
+                    Fechamento da Banca — {{ $banca->tcc->tema ?? 'TCC #' . $banca->tcc_id }}
+                </div>
 
-    {{-- Resumo das avaliações --}}
-    <h3>Avaliações dos Membros</h3>
-    @if($avaliacoes->isEmpty())
-        <p style="color: red;">Nenhuma avaliação lançada ainda. O fechamento não pode ser realizado.</p>
-    @else
-        <table border="1" cellpadding="6">
-            <thead>
-                <tr>
-                    <th>Avaliador</th>
-                    <th>Nota</th>
-                    <th>Parecer</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{-- Uma linha por avaliador (evita duplicação de duplas) --}}
-                @foreach($avaliacoes->unique('avaliador_id') as $avaliacao)
-                    <tr>
-                        <td>{{ $avaliacao->avaliador?->name ?? 'ID ' . $avaliacao->avaliador_id }}</td>
-                        <td>{{ number_format($avaliacao->nota, 2, ',', '') }}</td>
-                        <td>{{ $avaliacao->parecer }}</td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
+                <div class="card-body">
+                    <a href="{{ route('bancas.show', $banca) }}" class="btn btn-outline-secondary btn-sm mb-3">
+                        ← Voltar para a banca
+                    </a>
 
-        <p>
-            <strong>Média calculada:
-                {{ $mediaCalculada !== null ? number_format($mediaCalculada, 2, ',', '.') : '—' }}
-            </strong>
-        </p>
+                    @if(session('erro'))
+                        <div class="alert alert-danger">
+                            {{ session('erro') }}
+                        </div>
+                    @endif
 
-        {{--
-            Resultado sugerido automaticamente pelo sistema conforme critérios do documento:
-            >= 7      → Aprovado
-            5 a 6.9  → Aprovado com Ressalvas
-            < 5      → Reprovado
-        --}}
-        @if($resultadoSugerido)
-            <p style="color: #555;">
-                <strong>Resultado sugerido pelo sistema:</strong>
-                @if($resultadoSugerido === 'aprovado')
-                    <span style="color: green;">Aprovado (média ≥ 7)</span>
-                @elseif($resultadoSugerido === 'aprovado_com_ressalvas')
-                    <span style="color: orange;">Aprovado com Ressalvas (média entre 5 e 6,9)</span>
-                @else
-                    <span style="color: red;">Reprovado (média < 5)</span>
-                @endif
-            </p>
-        @endif
-    @endif
+                    {{-- Resumo das avaliações --}}
+                    <h3 class="h5">Avaliações dos Membros</h3>
 
-    <hr>
+                    @if($avaliacoes->isEmpty())
+                        <div class="alert alert-warning">
+                            Nenhuma avaliação lançada ainda. O fechamento não pode ser realizado.
+                        </div>
+                    @else
+                        <div class="table-responsive">
+                            <table class="table table-striped align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Avaliador</th>
+                                        <th>Nota</th>
+                                        <th>Parecer</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {{-- Uma linha por avaliador (evita duplicação de duplas) --}}
+                                    @foreach($avaliacoes->unique('avaliador_id') as $avaliacao)
+                                        <tr>
+                                            <td>{{ $avaliacao->avaliador?->name ?? 'ID ' . $avaliacao->avaliador_id }}</td>
+                                            <td>{{ number_format((float) $avaliacao->nota, 2, ',', '.') }}</td>
+                                            <td>{{ $avaliacao->parecer }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
 
-    <h3>Veredito Final</h3>
-    <p>Esta ação irá encerrar a banca, salvar a nota final e disponibilizar a ata.</p>
+                        <p>
+                            <strong>Média calculada:
+                                {{ $mediaCalculada !== null ? number_format((float) $mediaCalculada, 2, ',', '.') : '—' }}
+                            </strong>
+                        </p>
 
-    <form action="{{ route('bancas.fechar', $banca->id) }}" method="POST">
-        @csrf
+                        {{--
+                            Resultado sugerido automaticamente pelo sistema conforme critérios do documento:
+                            >= 7      → Aprovado
+                            5 a 6.9  → Aprovado com Ressalvas
+                            < 5      → Reprovado
+                        --}}
+                        @if($resultadoSugerido)
+                            <div class="alert alert-secondary">
+                                <strong>Resultado sugerido pelo sistema:</strong>
+                                @if($resultadoSugerido === 'aprovado')
+                                    Aprovado (média ≥ 7)
+                                @elseif($resultadoSugerido === 'aprovado_com_ressalvas')
+                                    Aprovado com Ressalvas (média entre 5 e 6,9)
+                                @else
+                                    Reprovado (média < 5)
+                                @endif
+                            </div>
+                        @endif
+                    @endif
 
-        <div style="margin-bottom: 15px;">
-            <label for="resultado_final" style="font-weight: bold;">Resultado Final:</label><br>
-            <select name="resultado_final" id="resultado_final" required>
-                <option value="">-- Selecione --</option>
-                <option value="aprovado"
-                    {{ old('resultado_final', $resultadoSugerido) === 'aprovado' ? 'selected' : '' }}>
-                    Aprovado
-                </option>
-                <option value="aprovado_com_ressalvas"
-                    {{ old('resultado_final', $resultadoSugerido) === 'aprovado_com_ressalvas' ? 'selected' : '' }}>
-                    Aprovado com Ressalvas
-                </option>
-                <option value="reprovado"
-                    {{ old('resultado_final', $resultadoSugerido) === 'reprovado' ? 'selected' : '' }}>
-                    Reprovado
-                </option>
-            </select>
-            @error('resultado_final')
-                <span style="color: red;">{{ $message }}</span>
-            @enderror
+                    <hr>
+
+                    <h3 class="h5">Veredito Final</h3>
+                    <p>Esta ação irá encerrar a banca, salvar a nota final e disponibilizar a ata.</p>
+
+                    <form action="{{ route('bancas.fechar', $banca->id) }}" method="POST">
+                        @csrf
+
+                        <div class="mb-3">
+                            <label for="resultado_final" class="form-label">Resultado Final</label>
+                            <select name="resultado_final" id="resultado_final" class="form-select @error('resultado_final') is-invalid @enderror" required>
+                                <option value="">-- Selecione --</option>
+                                <option value="aprovado" @selected(old('resultado_final', $resultadoSugerido) === 'aprovado')>
+                                    Aprovado
+                                </option>
+                                <option value="aprovado_com_ressalvas" @selected(old('resultado_final', $resultadoSugerido) === 'aprovado_com_ressalvas')>
+                                    Aprovado com Ressalvas
+                                </option>
+                                <option value="reprovado" @selected(old('resultado_final', $resultadoSugerido) === 'reprovado')>
+                                    Reprovado
+                                </option>
+                            </select>
+                            @error('resultado_final')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="parecer_final" class="form-label">Parecer Final / Texto da Ata</label>
+                            <textarea
+                                name="parecer_final"
+                                id="parecer_final"
+                                rows="8"
+                                class="form-control @error('parecer_final') is-invalid @enderror"
+                                placeholder="Registre aqui o resumo das considerações e justificativa do veredito da banca..."
+                                required
+                            >{{ old('parecer_final', $banca->parecer_final) }}</textarea>
+                            @error('parecer_final')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button
+                                type="submit"
+                                class="btn btn-success"
+                                onclick="return confirm('Confirmar o fechamento da banca? Esta ação não pode ser desfeita.')"
+                                @disabled($avaliacoes->isEmpty())
+                            >
+                                Confirmar Fechamento e Gerar Ata
+                            </button>
+
+                            <a href="{{ route('bancas.show', $banca) }}" class="btn btn-outline-secondary">
+                                Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-
-        <div style="margin-bottom: 15px;">
-            <label for="parecer_final" style="font-weight: bold;">
-                Parecer Final / Texto da Ata:
-            </label><br>
-            <textarea name="parecer_final" id="parecer_final" rows="8" cols="70"
-                      placeholder="Registre aqui o resumo das considerações e justificativa do veredito da banca..."
-                      required>{{ old('parecer_final') }}</textarea>
-            @error('parecer_final')
-                <span style="color: red;">{{ $message }}</span>
-            @enderror
-        </div>
-
-        <a href="{{ route('bancas.show', $banca) }}">Cancelar</a>
-        <button type="submit"
-            onclick="return confirm('Confirmar o fechamento da banca? Esta ação não pode ser desfeita.')">
-            Confirmar Fechamento e Gerar Ata
-        </button>
-    </form>
-
-</body>
-</html>
+    </div>
+@endsection

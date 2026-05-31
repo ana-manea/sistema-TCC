@@ -18,9 +18,7 @@ class AvaliacaoBanca extends Model
     ];
 
     protected $casts = [
-        'nota'       => 'decimal:2',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+        'nota' => 'decimal:2'
     ];
 
     public function banca()

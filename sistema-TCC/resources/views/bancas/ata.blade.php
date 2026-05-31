@@ -37,9 +37,9 @@
 
     <h2>Membros da Banca Avaliadora</h2>
     <ul>
-        @foreach($banca->bancaMembros as $membro)
+        @foreach($banca->membros as $membro)
             {{-- Usa user_id (coluna correta do model BancaMembro) --}}
-            <li>{{ $membro->user?->name ?? 'ID ' . $membro->usuario_id }} - Papel: {{ ucfirst(str_replace('_', ' ', $membro->papel)) }}</li>
+            <li>{{ $membro->user?->name ?? 'ID ' . $membro->user_id }} - Papel: {{ ucfirst(str_replace('_', ' ', $membro->papel)) }}</li>
         @endforeach
     </ul>
 

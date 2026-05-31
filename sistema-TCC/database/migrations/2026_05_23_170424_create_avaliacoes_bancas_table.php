@@ -17,6 +17,7 @@ return new class extends Migration
             $table->text('parecer')->nullable();
             $table->enum('resultado', ['aprovado', 'aprovado_com_ressalvas', 'reprovado'])->nullable();
             $table->timestamps();
+            $table->unique(['banca_id', 'avaliador_id']);
         });
     }
 

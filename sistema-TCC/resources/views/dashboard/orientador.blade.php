@@ -3,89 +3,38 @@
 @section('title', 'Dashboard Orientador')
 
 @section('content')
-@php
-    $nomes = explode(' ', trim($user->name));
-    $iniciais = strtoupper(substr($nomes[0], 0, 1) . (count($nomes) > 1 ? substr(end($nomes), 0, 1) : ''));
-    $corAvatar = $user->avatar ?? '#b20000';
-    $orientadorId = $user->orientador?->id;
-@endphp
+@include('layouts.dashboard_header', ['titulo' => 'Dashboard Orientador', 'perfil' => 'Orientador'])
 
-<div class="card mb-4">
-    <div class="card-body d-flex justify-content-between align-items-center">
-        <div class="d-flex align-items-center gap-4">
-            <div class="avatar-user" @style(['background-color: ' . $corAvatar])>{{ $iniciais }}</div>
-            <div>
-                <h1 class="h3 mb-1">Dashboard Orientador</h1>
-                <p class="mb-0 text-muted">{{ $user->name }} — {{ $user->email }}</p>
-            </div>
+<div class="row dashboard-shell g-4">
+    @include('layouts.menu_dashboard', ['usuario' => 'Orientador', 'opcoes' => $opcoes])
+
+    <section class="col-lg-9 col-xl-10">
+        <div class="row g-3 mb-4">
+            @foreach([
+                'Orientandos vinculados' => $indicadores['orientandos'],
+                'TCCs orientados' => $indicadores['tccs'],
+                'Solicitações pendentes' => $indicadores['solicitacoes'],
+                'Tarefas abertas' => $indicadores['tarefas'],
+            ] as $label => $valor)
+                <div class="col-sm-6 col-xl-3">
+                    <div class="card stat-card h-100">
+                        <div class="card-body">
+                            <div class="stat-value">{{ $valor }}</div>
+                            <div class="stat-label">{{ $label }}</div>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
         </div>
 
-        <a href="" class="btn btn-primary">Meu Perfil</a>
-    </div>
-</div>
-
-<div class="row g-4">
-
-    <div class="col-md-6 col-xl-4">
-        <a href="" class="text-decoration-none text-dark">
-            <div class="card h-100">
-                <div class="card-header"><i class="bi bi-people"></i> Meus Orientandos</div>
-                <div class="card-body">Perfil de cada aluno e título do TCC.</div>
-            </div>
-        </a>
-    </div>
-
-    <div class="col-md-6 col-xl-4">
-        <a href="" class="text-decoration-none text-dark">
-            <div class="card h-100">
-                <div class="card-header"><i class="bi bi-journal-text"></i> TCCs Orientados</div>
-                <div class="card-body">Projeto por orientando, status, entregas e histórico.</div>
-            </div>
-        </a>
-    </div>
-
-    <div class="col-md-6 col-xl-4">
-        <div class="card h-100">
-            <div class="card-header"><i class="bi bi-calendar-event"></i> Reuniões</div>
-            <div class="card-body">
-                <ul class="list-unstyled mb-0">
-                    <li><a href="">Agendar reunião</a></li>
-                    <li><a href="">Registrar/ver reuniões</a></li>
-                </ul>
-            </div>
+        <div class="row g-4">
+            @include('layouts.dashboard_card', ['rota' => route('orientador.orientandos.index'), 'icone' => 'bi bi-people', 'titulo' => 'Meus Orientandos', 'descricao' => 'Visualizar alunos vinculados, curso, semestre, título e status do TCC.'])
+            @include('layouts.dashboard_card', ['rota' => route('orientador.tccs.index'), 'icone' => 'bi bi-journal-text', 'titulo' => 'TCCs Orientados', 'descricao' => 'Acompanhar projetos, entregas, arquivos, banca, nota final e histórico.'])
+            @include('layouts.dashboard_card', ['rota' => route('orientador.reunioes.index'), 'icone' => 'bi bi-calendar-event', 'titulo' => 'Reuniões', 'descricao' => 'Agendar, registrar e visualizar reuniões com orientandos.'])
+            @include('layouts.dashboard_card', ['rota' => route('orientador.feedbacks.index'), 'icone' => 'bi bi-chat-left-text', 'titulo' => 'Feedbacks', 'descricao' => 'Criar feedbacks e acompanhar mensagens enviadas aos orientandos.'])
+            @include('layouts.dashboard_card', ['rota' => route('orientador.tarefas.index'), 'icone' => 'bi bi-check2-square', 'titulo' => 'Tarefas', 'descricao' => 'Definir tarefas, prazos e acompanhar status das atividades.'])
+            @include('layouts.dashboard_card', ['rota' => route('orientador.solicitacoes_orientador.index'), 'icone' => 'bi bi-envelope', 'titulo' => 'Solicitações', 'descricao' => 'Aceitar ou recusar solicitações de orientação conforme vagas disponíveis.'])
         </div>
-    </div>
-
-    <div class="col-md-6 col-xl-4">
-        <a href="" class="text-decoration-none text-dark">
-            <div class="card h-100">
-                <div class="card-header"><i class="bi bi-chat-left-text"></i> Feedbacks</div>
-                <div class="card-body">Dar feedback aos orientandos.</div>
-            </div>
-        </a>
-    </div>
-
-    <div class="col-md-6 col-xl-4">
-        <a href="{{ route('tarefas.index') }}" class="text-decoration-none text-dark">
-            <div class="card h-100">
-                <div class="card-header"><i class="bi bi-check2-square"></i> Tarefas</div>
-                <div class="card-body">Definir tarefas para os orientandos.</div>
-            </div>
-        </a>
-    </div>
-
-    <div class="col-md-6 col-xl-4">
-        @if($orientadorId)
-            <a href="{{ route('solicitacoes_orientador.index', $orientadorId) }}" class="text-decoration-none text-dark">
-        @else
-            <a href="#" class="text-decoration-none text-dark">
-        @endif
-            <div class="card h-100">
-                <div class="card-header"><i class="bi bi-envelope"></i> Solicitações</div>
-                <div class="card-body">Aceitar ou recusar solicitações de orientação.</div>
-            </div>
-        </a>
-    </div>
-
+    </section>
 </div>
 @endsection
