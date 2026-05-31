@@ -45,13 +45,13 @@
             <div class="card-body">
                 <ul class="list-unstyled mb-0">
                     <li class="mb-2">
-                        <a href="{{ route('aluno.tccs.index') }}">
+                        <a href="{{ route('tccs.index') }}">
                             Ver meu TCC
                         </a>
                     </li>
 
                     <li>
-                        <a href="{{ route('aluno.tccs.create') }}">
+                        <a href="{{ route('tccs.create') }}">
                             Criar meu TCC
                         </a>
                     </li>
@@ -66,7 +66,7 @@
 
     {{-- Feedbacks --}}
     <div class="col-md-6 col-xl-4">
-        <a href="{{ route('aluno.feedbacks.index') }}" class="text-decoration-none text-dark">
+        <a href="{{ route('dashboard.orientando') }}" class="text-decoration-none text-dark">
             <div class="card h-100">
                 <div class="card-header">
                     <i class="bi bi-chat-left-text"></i> Feedbacks
@@ -96,7 +96,7 @@
 
     {{-- Reuniões --}}
     <div class="col-md-6 col-xl-4">
-        <a href="{{ route('aluno.reunioes.index') }}" class="text-decoration-none text-dark">
+        <a href="{{ route('dashboard.orientando') }}" class="text-decoration-none text-dark">
             <div class="card h-100">
                 <div class="card-header">
                     <i class="bi bi-calendar-event"></i> Reuniões
@@ -119,19 +119,19 @@
             <div class="card-body">
                 <ul class="list-unstyled mb-0">
                     <li class="mb-2">
-                        <a href="{{ route('aluno.entregas.index') }}">
+                        <a href="{{ route('dashboard.orientando') }}">
                             Ver entregas
                         </a>
                     </li>
 
                     <li class="mb-2">
-                        <a href="{{ route('aluno.entregas.create') }}">
+                        <a href="{{ route('dashboard.orientando') }}">
                             Enviar documento
                         </a>
                     </li>
 
                     <li>
-                        <a href="{{ route('aluno.arquivos_entrega.index') }}">
+                        <a href="{{ route('dashboard.orientando') }}">
                             Ver arquivos e versões anteriores
                         </a>
                     </li>
@@ -150,13 +150,13 @@
             <div class="card-body">
                 <ul class="list-unstyled mb-0">
                     <li class="mb-2">
-                        <a href="{{ route('aluno.solicitacoes_orientador.create') }}">
+                        <a href="{{ route('solicitacoes_orientando.create') }}">
                             Nova solicitação
                         </a>
                     </li>
 
                     <li>
-                        <a href="{{ route('aluno.solicitacoes_orientador.index') }}">
+                        <a href="{{ route('solicitacoes_orientando.index') }}">
                             Ver minhas solicitações
                         </a>
                     </li>

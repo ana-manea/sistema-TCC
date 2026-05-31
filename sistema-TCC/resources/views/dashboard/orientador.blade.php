@@ -7,6 +7,7 @@
     $nomes = explode(' ', trim($user->name));
     $iniciais = strtoupper(substr($nomes[0], 0, 1) . (count($nomes) > 1 ? substr(end($nomes), 0, 1) : ''));
     $corAvatar = $user->avatar ?? '#b20000';
+    $orientadorId = $user->orientador?->id;
 @endphp
 
 <div class="card mb-4">
@@ -65,7 +66,7 @@
     </div>
 
     <div class="col-md-6 col-xl-4">
-        <a href="" class="text-decoration-none text-dark">
+        <a href="{{ route('tarefas.index') }}" class="text-decoration-none text-dark">
             <div class="card h-100">
                 <div class="card-header"><i class="bi bi-check2-square"></i> Tarefas</div>
                 <div class="card-body">Definir tarefas para os orientandos.</div>
@@ -74,7 +75,11 @@
     </div>
 
     <div class="col-md-6 col-xl-4">
-        <a href="" class="text-decoration-none text-dark">
+        @if($orientadorId)
+            <a href="{{ route('solicitacoes_orientador.index', $orientadorId) }}" class="text-decoration-none text-dark">
+        @else
+            <a href="#" class="text-decoration-none text-dark">
+        @endif
             <div class="card h-100">
                 <div class="card-header"><i class="bi bi-envelope"></i> Solicitações</div>
                 <div class="card-body">Aceitar ou recusar solicitações de orientação.</div>
