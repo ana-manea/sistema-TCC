@@ -33,7 +33,8 @@
                         <th>Área de Atuação</th>
                         <th>Disponibilidade</th>
                         <th>Limite de Orientandos</th>
-                        <th class="text-end">Ações</th>
+                        <th>Vagas Ocupadas</th>
+                        <th class="text-end">Ações</th> </tr>
                     </tr>
                 </thead>
 
@@ -58,48 +59,17 @@
                             <td>
                                 {{ $orientador->max_orientandos }}
                             </td>
-
-                            <td class="text-end">
-
-                                {{-- SHOW --}}
-                                <a
-                                    class="btn btn-sm btn-outline-secondary"
-                                    href="{{ route('orientadores.show', $orientador) }}"
-                                >
-                                    <i class="bi bi-eye"></i>
-                                    Ver
-                                </a>
-
-                                {{-- EDIT --}}
-                                <a
-                                    class="btn btn-sm btn-outline-primary"
-                                    href="{{ route('orientadores.edit', $orientador) }}"
-                                >
-                                    <i class="bi bi-pencil-square"></i>
-                                    Editar
-                                </a>
-
-                                {{-- DELETE --}}
-                                <form
-                                    action="{{ route('orientadores.destroy', $orientador) }}"
-                                    method="POST"
-                                    class="d-inline"
-                                    onsubmit="return confirm('Tem certeza que deseja remover este orientador?');"
-                                >
-                                    @csrf
-                                    @method('DELETE')
-
-                                    <button
-                                        type="submit"
-                                        class="btn btn-sm btn-outline-danger"
-                                    >
-                                        <i class="bi bi-trash"></i>
-                                        Excluir
-                                    </button>
-                                </form>
-
+                            <td>
+                                {{-- Exibe o número de orientandos ativos --}}
+                                <span>
+                                    {{ $orientador->orientandos_count }} / {{ $orientador->max_orientandos }}
+                                </span>
                             </td>
-
+                            <td class="text-end">
+                            <a href="{{ route('orientadores.show', $orientador->id) }}" class="btn btn-sm btn-outline-secondary" title="Ver Detalhes">
+                                <i class="bi bi-eye"></i> Ver
+                            </a>
+                        </td>
                         </tr>
 
                     @endforeach
