@@ -93,6 +93,20 @@ class TccController extends Controller
 
         return view('tccs.historico', compact('tcc', 'historicos'));
     }
+    /**
+     * Lista os TCCs com status "em andamento".
+     * Visível para todos os usuários exceto membros de banca.
+     */
+    public function emAndamento()
+    {
+        $tccs = Tcc::with(['orientador.user', 'orientandos.user'])
+            ->where('status', 'em_andamento')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+
+        return view('tccs.em_andamento', compact('tccs'));
+    }
 
   
 }
