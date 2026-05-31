@@ -123,8 +123,41 @@ class TccController extends Controller
 
         return view('tccs.show', compact('tcc'));
     }
+     /**
+     * Atualiza os dados do TCC e registra no histórico se o status mudar.
+     */
+    public function update(Request $request, Tcc $tcc)
+    {
+        $dados = $request->validate([
+            'orientador_id' => ['nullable', 'exists:orientadores,id'],
+            'tema'          => ['required', 'min:3', 'max:255'],
+            'descricao'     => ['nullable', 'string'],
+            'status'        => ['required', 'in:em_andamento,concluido,cancelado,suspenso'],
+            'observacao'    => ['nullable', 'string', 'max:500'],
+        ]);
 
 
+        $statusAnterior = $tcc->status;
 
-  
+
+        // 'observacao' é exclusivo do histórico — não pertence à tabela tccs
+        $tcc->update(\Arr::except($dados, ['observacao']));
+
+
+        // Registra no histórico somente se o status foi alterado
+        if ($statusAnterior !== $dados['status']) {
+            HistoricoTcc::create([
+                'tcc_id'          => $tcc->id,
+                'alterado_por'    => Auth::id(),
+                'status_anterior' => $statusAnterior,
+                'status_novo'     => $dados['status'],
+                'observacao'      => $request->input('observacao'),
+            ]);
+        }
+
+
+        return redirect()
+            ->route('tccs.show', $tcc)
+            ->with('sucesso', 'TCC atualizado com sucesso!');
+    }
 }
