@@ -80,5 +80,19 @@ class TccController extends Controller
             ->with('sucesso', 'TCC removido com sucesso!');
     }
 
+    /**
+     * Exibe o histórico de mudanças de status de um TCC.
+     */
+    public function historico(Tcc $tcc)
+    {
+        $historicos = HistoricoTcc::with('alteradoPor')
+            ->where('tcc_id', $tcc->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+
+        return view('tccs.historico', compact('tcc', 'historicos'));
+    }
+
   
 }
