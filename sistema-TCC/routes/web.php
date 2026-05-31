@@ -144,3 +144,11 @@ Route::controller(SolicitacaoOrientadorController::class)->group(function () {
         'store'
     )->name('solicitacoes_orientador.store');
 });
+
+// NOVO: Editar avaliação própria dentro do prazo de 48h
+Route::get('/avaliacoes/{avaliacaoBanca}/editar', [AvaliacaoBancaController::class, 'edit'])->name('avaliacoes.edit');
+Route::put('/avaliacoes/{avaliacaoBanca}', [AvaliacaoBancaController::class, 'update'])->name('avaliacoes.update');
+
+// NOVO: Definir membros da banca (presidente, interno, externo)
+Route::get('/bancas/{banca}/definir-membros', [BancaController::class, 'telaDefinirMembros'])->name('bancas.definirMembros');
+Route::post('/bancas/{banca}/definir-membros', [BancaController::class, 'salvarMembros'])->name('bancas.salvarMembros');

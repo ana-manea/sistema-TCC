@@ -14,7 +14,7 @@
         @foreach($orientadores as $orientador)
             <option value="{{ $orientador->id }}"
                 @selected(old('orientador_id', $tcc->orientador_id ?? '') == $orientador->id)>
-                {{ $orientador->user->name }}
+                {{ $orientador->user?->name ?? 'Usuário não encontrado' }}
             </option>
         @endforeach
     </select>
