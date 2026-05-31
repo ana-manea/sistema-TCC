@@ -94,7 +94,7 @@ class UserController extends Controller
         $dados = $request->validate([
             'name'     => ['required', 'string', 'max:255'],
             'email'    => ['required', 'email','max:255', 'unique:users,email,' . $user->id],
-            'password' => ['required','min:6'],
+            'password' => ['nullable','min:6'],
             'funcao'   => ['required','in:admin,orientador,orientando,membro_banca'],
             'avatar'   => ['nullable','regex:/^#[0-9A-Fa-f]{6}$/'],
 

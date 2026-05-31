@@ -6,7 +6,7 @@
     <h1>Bancas Avaliadoras</h1>
 
     <a class="btn btn-primary" href="{{ route('bancas.create') }}">
-        <i class="bi bi-plus-circle"> Nova Banca
+        <i class="bi bi-plus-circle"></i> Nova Banca
     </a>
 
     @if(session('sucesso'))
@@ -49,7 +49,7 @@
                                 // 1. Checa dinamicamente se o usuário logado é o presidente DESTA banca específica
                                 $eOPresidente = \DB::table('banca_membros')
                                     ->where('banca_id', $banca->id)
-                                    ->where('usuario_id', $usuarioLogadoId)
+                                    ->where('user_id', $usuarioLogadoId)
                                     ->where('papel', 'presidente')
                                     ->exists();
 

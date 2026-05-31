@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
+use App\Models\AvaliacaoBanca;
 use App\Models\Banca;
 use App\Models\BancaMembro;
-use App\Models\AvaliacaoBanca;
 use App\Models\Tcc;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class BancaController extends Controller
 {
@@ -20,7 +20,7 @@ class BancaController extends Controller
     {
         $statusFiltro = $request->input('status');
 
-        $query = Banca::with(['tcc', 'bancaMembros', 'avaliacoes']);
+        $query = Banca::with(['tcc', 'membros', 'avaliacoes']);
 
         if ($statusFiltro) {
             $query->where('status', $statusFiltro);
@@ -28,7 +28,7 @@ class BancaController extends Controller
 
         $bancas = $query->orderBy('data_hora', 'desc')->get();
 
-        $usuarioLogadoId = auth()->id();
+        $usuarioLogadoId = Auth::id();
 
         return view('bancas.index', compact('bancas', 'usuarioLogadoId', 'statusFiltro'));
     }
@@ -41,36 +41,80 @@ class BancaController extends Controller
     public function create()
     {
         // Apenas TCCs sem banca podem receber uma nova banca
-        $tccsDisponiveis = Tcc::with(['orientador.user', 'orientandos.user'])
+        $tccs = Tcc::with(['orientador.user', 'orientandos.user'])
             ->whereDoesntHave('banca')
             ->orderBy('tema')
             ->get();
 
-        return view('bancas.create', compact('tccsDisponiveis'));
+        // Apenas usuários com função membro_banca podem ser selecionados no formulário
+        $membrosBanca = User::where('funcao', 'membro_banca')
+            ->orderBy('name')
+            ->get();
+
+        return view('bancas.create', compact('tccs', 'membrosBanca'));
     }
 
     /**
      * Salva a nova banca.
      * Status inicial sempre "agendada" — não pode ser criada já como "realizada".
+     * Também salva os três membros da banca: presidente, membro interno e membro externo.
      */
     public function store(Request $request)
     {
         $request->validate([
-            'tcc_id'    => 'required|integer|exists:tccs,id|unique:bancas,tcc_id',
-            'data_hora' => 'required|date',
-            'local'     => 'required|string|max:255',
+            'tcc_id'            => 'required|integer|exists:tccs,id|unique:bancas,tcc_id',
+            'data_hora'         => 'required|date',
+            'local'             => 'required|string|max:255',
+            'presidente_id'     => 'required|integer|exists:users,id|different:membro_interno_id|different:membro_externo_id',
+            'membro_interno_id' => 'required|integer|exists:users,id|different:presidente_id|different:membro_externo_id',
+            'membro_externo_id' => 'required|integer|exists:users,id|different:presidente_id|different:membro_interno_id',
         ], [
-            'tcc_id.exists'  => 'O TCC selecionado não existe.',
-            'tcc_id.unique'  => 'Este TCC já possui uma banca agendada.',
-            'data_hora.date' => 'Insira uma data e hora válidas.',
+            'tcc_id.exists'              => 'O TCC selecionado não existe.',
+            'tcc_id.unique'              => 'Este TCC já possui uma banca agendada.',
+            'data_hora.date'             => 'Insira uma data e hora válidas.',
+            'presidente_id.required'     => 'Selecione um Presidente para a banca.',
+            'membro_interno_id.required' => 'Selecione um Membro Interno.',
+            'membro_externo_id.required' => 'Selecione um Membro Externo.',
+            'different'                  => 'Presidente, Membro Interno e Membro Externo devem ser pessoas diferentes.',
         ]);
 
-        Banca::create([
+        $ids = [
+            (int) $request->presidente_id,
+            (int) $request->membro_interno_id,
+            (int) $request->membro_externo_id,
+        ];
+
+        // Todos devem ter função membro_banca
+        $totalValidos = User::whereIn('id', $ids)
+            ->where('funcao', 'membro_banca')
+            ->count();
+
+        if ($totalValidos < 3) {
+            return redirect()->back()
+                ->with('erro', 'Todos os membros da banca devem ter a função "Membro da Banca".')
+                ->withInput();
+        }
+
+        // O orientador do TCC não pode ser membro
+        $tcc = Tcc::with('orientador')->findOrFail($request->tcc_id);
+        $userIdOrientadorBloqueado = $tcc->orientador->user_id ?? null;
+
+        if ($userIdOrientadorBloqueado && in_array($userIdOrientadorBloqueado, $ids)) {
+            return back()
+                ->with('erro', 'O orientador do TCC não pode ser membro avaliador da banca.')
+                ->withInput();
+        }
+
+        $banca = Banca::create([
             'tcc_id'    => $request->tcc_id,
             'data_hora' => $request->data_hora,
             'local'     => $request->local,
             'status'    => 'agendada', // sempre começa como agendada
         ]);
+
+        BancaMembro::create(['banca_id' => $banca->id, 'user_id' => $request->presidente_id,     'papel' => 'presidente']);
+        BancaMembro::create(['banca_id' => $banca->id, 'user_id' => $request->membro_interno_id, 'papel' => 'membro_interno']);
+        BancaMembro::create(['banca_id' => $banca->id, 'user_id' => $request->membro_externo_id, 'papel' => 'membro_externo']);
 
         return redirect()->route('bancas.index')->with('sucesso', 'Banca agendada com sucesso!');
     }
@@ -84,7 +128,7 @@ class BancaController extends Controller
         $banca->load([
             'tcc.orientandos.user',
             'tcc.orientador.user',
-            'bancaMembros.user',
+            'membros.user',
             'avaliacoes.avaliador',
         ]);
 
@@ -93,28 +137,84 @@ class BancaController extends Controller
 
     /**
      * Formulário de edição da banca (somente admin).
-     * Permite editar data, local e status — não permite trocar o TCC vinculado.
+     * Permite editar TCC, data, local, status e membros.
      */
     public function edit(Banca $banca)
     {
-        return view('bancas.edit', compact('banca'));
+        $banca->load(['membros', 'tcc.orientador.user', 'tcc.orientandos.user']);
+
+        // Na edição, lista TCCs sem banca e também mantém o TCC atual da banca.
+        $tccs = Tcc::with(['orientador.user', 'orientandos.user'])
+            ->where(function ($query) use ($banca) {
+                $query->whereDoesntHave('banca')
+                    ->orWhere('id', $banca->tcc_id);
+            })
+            ->orderBy('tema')
+            ->get();
+
+        $membrosBanca = User::where('funcao', 'membro_banca')
+            ->orderBy('name')
+            ->get();
+
+        return view('bancas.edit', compact('banca', 'tccs', 'membrosBanca'));
     }
 
     /**
-     * Atualiza data, local e status da banca.
-     * tcc_id não pode ser alterado após criação.
+     * Atualiza data, local, status e membros da banca.
      */
     public function update(Request $request, Banca $banca)
     {
         $request->validate([
-            'data_hora' => 'required|date',
-            'local'     => 'required|string|max:255',
-            'status'    => 'required|in:agendada,realizada,cancelada',
+            'tcc_id'            => 'required|integer|exists:tccs,id|unique:bancas,tcc_id,' . $banca->id,
+            'data_hora'         => 'required|date',
+            'local'             => 'required|string|max:255',
+            'status'            => 'required|in:agendada,realizada,cancelada',
+            'presidente_id'     => 'required|integer|exists:users,id|different:membro_interno_id|different:membro_externo_id',
+            'membro_interno_id' => 'required|integer|exists:users,id|different:presidente_id|different:membro_externo_id',
+            'membro_externo_id' => 'required|integer|exists:users,id|different:presidente_id|different:membro_interno_id',
         ], [
-            'data_hora.date' => 'Insira uma data e hora válidas.',
+            'data_hora.date'             => 'Insira uma data e hora válidas.',
+            'presidente_id.required'     => 'Selecione um Presidente para a banca.',
+            'membro_interno_id.required' => 'Selecione um Membro Interno.',
+            'membro_externo_id.required' => 'Selecione um Membro Externo.',
+            'different'                  => 'Presidente, Membro Interno e Membro Externo devem ser pessoas diferentes.',
         ]);
 
-        $banca->update($request->only(['data_hora', 'local', 'status']));
+        $ids = [
+            (int) $request->presidente_id,
+            (int) $request->membro_interno_id,
+            (int) $request->membro_externo_id,
+        ];
+
+        // Todos devem ter função membro_banca
+        $totalValidos = User::whereIn('id', $ids)
+            ->where('funcao', 'membro_banca')
+            ->count();
+
+        if ($totalValidos < 3) {
+            return redirect()->back()
+                ->with('erro', 'Todos os membros da banca devem ter a função "Membro da Banca".')
+                ->withInput();
+        }
+
+        // O orientador do TCC não pode ser membro
+        $tcc = Tcc::with('orientador')->findOrFail($request->tcc_id);
+        $userIdOrientadorBloqueado = $tcc->orientador->user_id ?? null;
+
+        if ($userIdOrientadorBloqueado && in_array($userIdOrientadorBloqueado, $ids)) {
+            return redirect()->back()
+                ->with('erro', 'O orientador do TCC não pode ser membro avaliador da banca.')
+                ->withInput();
+        }
+
+        $banca->update($request->only(['tcc_id', 'data_hora', 'local', 'status']));
+
+        // Remove membros anteriores e insere os novos
+        BancaMembro::where('banca_id', $banca->id)->delete();
+
+        BancaMembro::create(['banca_id' => $banca->id, 'user_id' => $request->presidente_id,     'papel' => 'presidente']);
+        BancaMembro::create(['banca_id' => $banca->id, 'user_id' => $request->membro_interno_id, 'papel' => 'membro_interno']);
+        BancaMembro::create(['banca_id' => $banca->id, 'user_id' => $request->membro_externo_id, 'papel' => 'membro_externo']);
 
         return redirect()->route('bancas.index')->with('sucesso', 'Banca atualizada com sucesso!');
     }
@@ -130,100 +230,13 @@ class BancaController extends Controller
     }
 
     /**
-     * Exibe o formulário para definir os membros da banca.
-     * Função: "Def. banca" — selecionar presidente, membro interno e membro externo.
-     *
-     * Regras do documento:
-     * - Somente usuários com função "membro_banca" podem ser membros avaliadores.
-     * - O orientador do TCC não pode ser selecionado como membro da banca.
-     */
-    public function telaDefinirMembros(Banca $banca)
-    {
-        $banca->load(['tcc.orientador', 'bancaMembros.user']);
-
-        // user_id do orientador deste TCC — bloqueado de ser membro
-        $userIdOrientadorBloqueado = $banca->tcc->orientador->user_id ?? null;
-
-        // Apenas usuários com função membro_banca (conforme regra do documento)
-        $usuariosDisponiveis = User::join('usuarios', 'users.id', '=', 'usuarios.id')
-        ->whereIn('usuarios.funcao', ['orientador', 'membro_banca'])
-        ->when($userIdOrientadorBloqueado, function ($query) use ($userIdOrientadorBloqueado) {
-            $query->where('users.id', '!=', $userIdOrientadorBloqueado);
-        })
-        ->select('users.*', 'usuarios.funcao')
-        ->orderBy('users.name')
-        ->get();
-
-        return view('bancas.definir_membros', compact('banca', 'usuariosDisponiveis'));
-    }
-
-    /**
-     * Salva os membros da banca.
-     * Função: "Def. banca" — valida 3 pessoas distintas, todas com função membro_banca,
-     * e garante que o orientador do TCC não seja membro.
-     */
-    public function salvarMembros(Request $request, Banca $banca)
-    {
-        $request->validate([
-            'presidente'     => 'required|integer|exists:users,id',
-            'membro_interno' => 'required|integer|exists:users,id',
-            'membro_externo' => 'required|integer|exists:users,id',
-        ], [
-            'presidente.required'     => 'Selecione um Presidente para a banca.',
-            'membro_interno.required' => 'Selecione um Membro Interno.',
-            'membro_externo.required' => 'Selecione um Membro Externo.',
-        ]);
-
-        $ids = [
-            (int) $request->presidente,
-            (int) $request->membro_interno,
-            (int) $request->membro_externo,
-        ];
-
-        // Os 3 membros devem ser pessoas diferentes
-        if (count(array_unique($ids)) < 3) {
-            return redirect()->back()
-                ->with('erro', 'Presidente, Membro Interno e Membro Externo devem ser pessoas diferentes.')
-                ->withInput();
-        }
-
-        // Todos devem ter função membro_banca
-        $totalValidos = User::whereIn('id', $ids)->where('funcao', 'membro_banca')->count();
-        if ($totalValidos < 3) {
-            return redirect()->back()
-                ->with('erro', 'Todos os membros da banca devem ter a função "Membro da Banca".')
-                ->withInput();
-        }
-
-        // O orientador do TCC não pode ser membro
-        $banca->load('tcc.orientador');
-        $userIdOrientadorBloqueado = $banca->tcc->orientador->user_id ?? null;
-
-        if ($userIdOrientadorBloqueado && in_array($userIdOrientadorBloqueado, $ids)) {
-            return redirect()->back()
-                ->with('erro', 'O orientador do TCC não pode ser membro avaliador da banca.')
-                ->withInput();
-        }
-
-        // Remove membros anteriores e insere os novos
-        BancaMembro::where('banca_id', $banca->id)->delete();
-
-        BancaMembro::create(['banca_id' => $banca->id, 'usuario_id' => $request->presidente,     'papel' => 'presidente']);
-        BancaMembro::create(['banca_id' => $banca->id, 'usuario_id' => $request->membro_interno, 'papel' => 'membro_interno']);
-        BancaMembro::create(['banca_id' => $banca->id, 'usuario_id' => $request->membro_externo, 'papel' => 'membro_externo']);
-
-        return redirect()->route('bancas.show', $banca)
-            ->with('sucesso', 'Membros da banca definidos com sucesso!');
-    }
-
-    /**
      * Presidente confirma que a apresentação foi realizada.
      * Função: "Confirmar Banca Realizada" — apenas o presidente pode confirmar.
      */
     public function confirmarRealizada(Banca $banca)
     {
         $eOPresidente = BancaMembro::where('banca_id', $banca->id)
-            ->where('usuario_id', auth()->id())
+            ->where('user_id', Auth::id())
             ->where('papel', 'presidente')
             ->exists();
 
@@ -245,7 +258,7 @@ class BancaController extends Controller
     public function telaFechamento(Banca $banca)
     {
         $eOPresidente = BancaMembro::where('banca_id', $banca->id)
-            ->where('usuario_id', auth()->id())
+            ->where('user_id', Auth::id())
             ->where('papel', 'presidente')
             ->exists();
 
@@ -254,12 +267,11 @@ class BancaController extends Controller
                 ->with('erro', 'Acesso negado. Apenas o Presidente da banca pode acessar esta tela.');
         }
 
-        $avaliacoes = AvaliacaoBanca::with('avaliador')
-            ->where('banca_id', $banca->id)
-            ->get();
+        $banca->load(['tcc.orientador.user', 'tcc.orientandos.user', 'membros.user', 'avaliacoes.avaliador']);
 
-        $notas          = $avaliacoes->pluck('nota');
-        $mediaCalculada = $notas->isEmpty() ? null : round($notas->avg(), 2);
+        $avaliacoes = $banca->avaliacoes;
+        $notas = $avaliacoes->pluck('nota');
+        $mediaCalculada = $notas->isEmpty() ? null : round((float) $notas->avg(), 2);
 
         // Calcula o resultado sugerido automaticamente conforme critérios do documento:
         // >= 7      → aprovado
@@ -290,7 +302,7 @@ class BancaController extends Controller
     public function fecharBanca(Request $request, Banca $banca)
     {
         $eOPresidente = BancaMembro::where('banca_id', $banca->id)
-            ->where('usuario_id', auth()->id())
+            ->where('user_id', Auth::id())
             ->where('papel', 'presidente')
             ->exists();
 
@@ -313,7 +325,7 @@ class BancaController extends Controller
                 ->with('erro', 'Não é possível fechar a banca sem ao menos uma nota lançada.');
         }
 
-        $notaFinal = round($notas->avg(), 2);
+        $notaFinal = round((float) $notas->avg(), 2);
 
         // Salva na tabela bancas
         $banca->update([
@@ -325,10 +337,12 @@ class BancaController extends Controller
 
         // Sincroniza nota_final e resultado_final na tabela tccs
         // para que a listagem de TCCs exiba os dados corretamente
-        $banca->tcc->update([
-            'nota_final'      => $notaFinal,
-            'resultado_final' => $request->resultado_final,
-        ]);
+        if ($banca->tcc) {
+            $banca->tcc->update([
+                'nota_final'      => $notaFinal,
+                'resultado_final' => $request->resultado_final,
+            ]);
+        }
 
         return redirect()->route('bancas.show', $banca)
             ->with('sucesso', 'Banca encerrada com sucesso! Resultado registrado.');
@@ -351,14 +365,14 @@ class BancaController extends Controller
         $banca->load([
             'tcc.orientandos.user',
             'tcc.orientador.user',
-            'bancaMembros.user',
+            'membros.user',
             'avaliacoes.avaliador',
         ]);
 
-        $usuarioLogado = auth()->user();
+        $usuarioLogado = Auth::user();
 
         // Verifica se o usuário tem permissão de ver a ata
-        $eMembroDaBanca = $banca->bancaMembros->contains('usuario_id', $usuarioLogado->id);
+        $eMembroDaBanca = $banca->membros->contains('user_id', $usuarioLogado->id);
         $eOrientando    = optional($usuarioLogado)->funcao === 'orientando';
         $eOrientador    = optional($usuarioLogado)->funcao === 'orientador';
         $eAdmin         = optional($usuarioLogado)->funcao === 'admin';

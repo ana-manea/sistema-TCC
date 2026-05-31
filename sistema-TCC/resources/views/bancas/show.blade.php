@@ -72,7 +72,7 @@
 
     {{-- Membros da Banca --}}
     <h2>Membros da Banca</h2>
-    @if($banca->bancaMembros->isEmpty())
+    @if($banca->membros->isEmpty())
         <p>Nenhum membro cadastrado ainda.</p>
         <a href="{{ route('bancas.definirMembros', $banca) }}">
             <button>Definir Membros da Banca</button>
@@ -86,7 +86,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($banca->bancaMembros as $membro)
+                @foreach($banca->membros as $membro)
                     <tr>
                         <td>{{ $membro->user?->name ?? '—' }}</td>
                         <td>{{ ucfirst(str_replace('_', ' ', $membro->papel)) }}</td>
@@ -104,13 +104,13 @@
     <h2>Ações</h2>
 
     @php
-        $euSouPresidente = $banca->bancaMembros
-            ->where('usuario_id', auth()->id())
+        $euSouPresidente = $banca->membros
+            ->where('user_id', auth()->id())
             ->where('papel', 'presidente')
             ->isNotEmpty();
 
-        $euSouMembro = $banca->bancaMembros
-            ->where('usuario_id', auth()->id())
+        $euSouMembro = $banca->membros
+            ->where('user_id', auth()->id())
             ->isNotEmpty();
 
         // Verifica se este avaliador já lançou nota (considera apenas 1 linha por banca/avaliador)
