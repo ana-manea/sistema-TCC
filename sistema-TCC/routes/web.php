@@ -14,7 +14,6 @@ use App\Http\Controllers\OrientandoController;
 use App\Http\Controllers\TccController;
 use App\Http\Controllers\SolicitacaoOrientadorController;
 use App\Models\Orientador;
-use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');

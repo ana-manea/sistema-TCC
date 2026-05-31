@@ -27,7 +27,7 @@
                             <th>Curso</th>
                             <th>Semestre</th>
                             <th>Orientador</th>
-                            <th class="text-end">Ações</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
 

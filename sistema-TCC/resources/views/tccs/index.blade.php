@@ -8,7 +8,7 @@
         <h1 class="h3 mb-0">Trabalhos de Conclusão de Curso</h1>
 
         <div>
-            <a href="{{ route('tccs.em_andamento') }}">
+            <a class="btn btn-outline-secondary" href="{{ route('tccs.em_andamento') }}">
                 <i class="bi bi-hourglass-split"></i> Em andamento
             </a>
             <a class="btn btn-primary" href="{{ route('tccs.create') }}">
@@ -72,23 +72,23 @@
                                 </td>
 
                                 <td>
-                                    <a href="{{ route('tccs.show', $tcc) }}">
+                                    <a class="btn btn-sm btn-outline-secondary" href="{{ route('tccs.show', $tcc) }}">
                                         <i class="bi bi-eye"></i> Ver
                                     </a>
 
-                                    <a href="{{ route('tccs.historico', $tcc) }}">
+                                    <a class="btn btn-sm btn-outline-secondary" href="{{ route('tccs.historico', $tcc) }}">
                                         <i class="bi bi-clock-history"></i> Histórico
                                     </a>
 
-                                    <a href="{{ route('tccs.edit', $tcc) }}">
+                                    <a class="btn btn-sm btn-outline-primary" href="{{ route('tccs.edit', $tcc) }}">
                                         <i class="bi bi-pencil-square"></i> Editar
                                     </a>
 
-                                    <form action="{{ route('tccs.destroy', $tcc) }}" method="POST"
+                                    <form class="d-inline" action="{{ route('tccs.destroy', $tcc) }}" method="POST"
                                         onsubmit="return confirm('Deseja realmente excluir este TCC?');">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit">
+                                        <button class="btn btn-sm btn-outline-danger" type="submit">
                                             <i class="bi bi-trash"></i> Excluir
                                         </button>
                                     </form>

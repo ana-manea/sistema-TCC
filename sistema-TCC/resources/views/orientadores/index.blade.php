@@ -27,7 +27,7 @@
                             <th>Disponibilidade</th>
                             <th>Limite de Orientandos</th>
                             <th>Vagas Ocupadas</th>
-                            <th class="text-end">Ações</th> </tr>
+                            <th>Ações</th> </tr>
                         </tr>
                     </thead>
                     <tbody>
