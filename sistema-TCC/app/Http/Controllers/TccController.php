@@ -107,6 +107,24 @@ class TccController extends Controller
 
         return view('tccs.em_andamento', compact('tccs'));
     }
+     /**
+     * Exibe os detalhes de um TCC, incluindo o resultado final da banca.
+     * Acessível por todos os usuários.
+     */
+    public function show(Tcc $tcc)
+    {
+        $tcc->load([
+            'orientador.user',
+            'orientandos.user',
+            'banca.bancaMembros',
+            'banca.avaliacoes',
+        ]);
+
+
+        return view('tccs.show', compact('tcc'));
+    }
+
+
 
   
 }
