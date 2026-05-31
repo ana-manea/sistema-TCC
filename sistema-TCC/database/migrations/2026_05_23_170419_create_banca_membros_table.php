@@ -14,6 +14,8 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->enum('papel', ['presidente', 'membro_interno', 'membro_externo']);
             $table->timestamps();
+            $table->unique(['banca_id', 'user_id']);
+            $table->unique(['banca_id', 'papel']);
         });
     }
 

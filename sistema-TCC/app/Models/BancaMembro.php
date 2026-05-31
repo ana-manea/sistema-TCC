@@ -10,13 +10,13 @@ class BancaMembro extends Model
 
     protected $fillable = [
         'banca_id',
-        'usuario_id',
+        'user_id',
         'papel',
     ];
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'usuario_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function banca()
