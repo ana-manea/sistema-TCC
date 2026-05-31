@@ -1,9 +1,8 @@
 @csrf
 
 <div class="teacher-block border rounded p-3 mb-3">
-    <div class="mb-2 fw-bold">
-        Dados do Orientador
-    </div>
+    <h5>Dados do Orientador</h5>
+
     <div class="mb-3">
         <label for="area_atuacao" class="form-label">
             Área de Atuação

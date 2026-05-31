@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -11,24 +12,22 @@
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
         <div class="container">
-            <a class="navbar-brand" href="{{ route('tccs.index') }}">
-                <i class="bi bi-mortarboard"></i> Sistema de TCC
+            <a class="navbar-brand" href="{{ route('dashboard') }}">
+                <i class="bi bi-mortarboard"></i>
+                Sistema de TCC
             </a>
+
 
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
+            
             <div id="mainNav" class="collapse navbar-collapse">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('users.index') }}">
-                            <i class="bi bi-people"></i> Usuários
-                        </a>
-                    </li>
-                    {{-- 
+                    
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('orientadores.index') }}">
                             <i class="bi bi-person-badge"></i> Orientadores
@@ -48,13 +47,13 @@
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('reunioes.index') }}">
+                        <a class="nav-link" href="{{ route('users.index') }}">
                             <i class="bi bi-calendar-event"></i> Reuniões
                         </a>
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('entregas.index') }}">
+                        <a class="nav-link" href="{{ route('users.index') }}">
                             <i class="bi bi-upload"></i> Entregas
                         </a>
                     </li>
@@ -63,13 +62,27 @@
                         <a class="nav-link" href="{{ route('bancas.index') }}">
                             <i class="bi bi-award"></i> Bancas
                         </a>
-                    </li> --}}
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('users.index') }}">
+                            <i class="bi bi-people"></i> Usuários
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="btn btn-link nav-link">
+                                <i class="bi bi-box-arrow-right"></i> Sair
+                            </button>
+                        </form>
+                    </li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <main class="container">
+    <main class="container-fluid">
         @if(session('sucesso'))
             <div class="alert alert-success alert-dismissible fade show mt-2" role="alert">
                 <i class="bi bi-check-circle"></i> {{ session('sucesso') }}
@@ -80,8 +93,8 @@
         @yield('content')
     </main>
 
-    <footer class="border-top mt-5 py-3">
-        <div class="container text-muted small">
+    <footer class="border-top py-3">
+        <div class="container text-muted small text-center">
             Fatec Prudente – Programação Web (Laravel)
         </div>
     </footer>
