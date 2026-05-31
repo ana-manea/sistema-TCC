@@ -7,18 +7,52 @@ use Illuminate\Database\Eloquent\Model;
 class Tcc extends Model
 {
     protected $table = 'tccs';
-    
-    protected $fillable = ['id', 'orientador_id', 'tema', 'descricao', 'status', 'resultado_final', 'nota_final', 'created_at', 'updated_at'];
-    
+
+    /**
+     * nota_final e resultado_final estão no fillable para permitir
+     * a sincronização feita pelo BancaController::fecharBanca().
+     * Os formulários de criação/edição de TCC NÃO enviam esses campos,
+     * e o TccController::update() não os aceita via validate().
+     */
+    protected $fillable = [
+        'orientador_id',
+        'tema',
+        'descricao',
+        'status',
+        'nota_final',
+        'resultado_final',
+    ];
+
+    protected $casts = [
+        'nota_final'  => 'decimal:2',
+        'created_at'  => 'datetime',
+        'updated_at'  => 'datetime',
+    ];
 
     public function orientador()
     {
         return $this->belongsTo(Orientador::class, 'orientador_id');
     }
 
+    public function orientandos()
+    {
+        return $this->belongsToMany(Orientando::class, 'tcc_orientandos', 'tcc_id', 'orientando_id')
+            ->withTimestamps();
+    }
+
     public function reunioes()
     {
         return $this->hasMany(Reuniao::class, 'tcc_id');
+    }
+
+    public function feedbacks()
+    {
+        return $this->hasMany(Feedback::class, 'tcc_id');
+    }
+
+    public function tarefas()
+    {
+        return $this->hasMany(Tarefa::class, 'tcc_id');
     }
 
     public function entregas()
@@ -31,14 +65,8 @@ class Tcc extends Model
         return $this->hasOne(Banca::class, 'tcc_id');
     }
 
-    
-    protected $casts = [
-        'data' => 'datetime'
-    ];
-
-    public function orientandos()
+    public function historicos()
     {
-        return $this->belongsToMany(Orientando::class, 'tcc_orientandos', 'tcc_id', 'orientando_id')
-            ->withTimestamps();
+        return $this->hasMany(HistoricoTcc::class, 'tcc_id');
     }
 }

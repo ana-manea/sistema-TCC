@@ -6,8 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class HistoricoTcc extends Model
 {
-    //
-     protected $table = 'historico_tcc';
+    protected $table = 'historico_tcc';
 
     protected $fillable = [
         'tcc_id',

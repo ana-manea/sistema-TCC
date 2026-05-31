@@ -6,21 +6,25 @@ use App\Models\Tcc;
 use App\Models\HistoricoTcc;
 use App\Models\Orientador;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 
 class TccController extends Controller
 {
     /**
      * Lista todos os TCCs cadastrados.
+     * Exibe nota_final e resultado_final vindos da banca (via relacionamento),
+     * não da coluna direta do TCC — que só é preenchida após fechamento da banca.
      */
     public function index()
     {
-        $tccs = Tcc::with(['orientador.user', 'orientandos.user'])
+        $tccs = Tcc::with(['orientador.user', 'orientandos.user', 'banca'])
             ->orderBy('created_at', 'desc')
             ->get();
 
         return view('tccs.index', compact('tccs'));
     }
+
     /**
      * Exibe o formulário de cadastro de um novo TCC.
      */
@@ -30,8 +34,10 @@ class TccController extends Controller
 
         return view('tccs.create', compact('orientadores'));
     }
+
     /**
      * Salva um novo TCC no banco e registra o histórico inicial.
+     * nota_final e resultado_final nunca são recebidos aqui — são calculados pela banca.
      */
     public function store(Request $request)
     {
@@ -44,7 +50,6 @@ class TccController extends Controller
 
         $tcc = Tcc::create($dados);
 
-        // Registra a criação no histórico
         HistoricoTcc::create([
             'tcc_id'          => $tcc->id,
             'alterado_por'    => Auth::id(),
@@ -59,13 +64,65 @@ class TccController extends Controller
     }
 
     /**
+     * Exibe os detalhes completos de um TCC.
+     * Resultado final é lido da banca, nunca do campo direto do TCC.
+     */
+    public function show(Tcc $tcc)
+    {
+        $tcc->load([
+            'orientador.user',
+            'orientandos.user',
+            'banca.bancaMembros.user',
+            'banca.avaliacoes.avaliador',
+        ]);
+
+        return view('tccs.show', compact('tcc'));
+    }
+
+    /**
      * Exibe o formulário de edição de um TCC existente.
+     * O formulário não exibe nem aceita nota_final/resultado_final.
      */
     public function edit(Tcc $tcc)
     {
         $orientadores = Orientador::with('user')->get();
 
         return view('tccs.edit', compact('tcc', 'orientadores'));
+    }
+
+    /**
+     * Atualiza os dados do TCC e registra no histórico se o status mudar.
+     * nota_final e resultado_final são bloqueados aqui — só a banca os define.
+     */
+    public function update(Request $request, Tcc $tcc)
+    {
+        $dados = $request->validate([
+            'orientador_id' => ['nullable', 'exists:orientadores,id'],
+            'tema'          => ['required', 'min:3', 'max:255'],
+            'descricao'     => ['nullable', 'string'],
+            'status'        => ['required', 'in:em_andamento,concluido,cancelado,suspenso'],
+            'observacao'    => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $statusAnterior = $tcc->status;
+
+        // 'observacao' é só para o histórico — não existe na tabela tccs
+        $tcc->update(Arr::except($dados, ['observacao']));
+
+        // Registra histórico apenas se o status mudou
+        if ($statusAnterior !== $dados['status']) {
+            HistoricoTcc::create([
+                'tcc_id'          => $tcc->id,
+                'alterado_por'    => Auth::id(),
+                'status_anterior' => $statusAnterior,
+                'status_novo'     => $dados['status'],
+                'observacao'      => $request->input('observacao'),
+            ]);
+        }
+
+        return redirect()
+            ->route('tccs.show', $tcc)
+            ->with('sucesso', 'TCC atualizado com sucesso!');
     }
 
     /**
@@ -81,6 +138,20 @@ class TccController extends Controller
     }
 
     /**
+     * Lista apenas os TCCs com status "em_andamento".
+     * Visível para todos exceto membros de banca (conforme o documento).
+     */
+    public function emAndamento()
+    {
+        $tccs = Tcc::with(['orientador.user', 'orientandos.user'])
+            ->where('status', 'em_andamento')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('tccs.em_andamento', compact('tccs'));
+    }
+
+    /**
      * Exibe o histórico de mudanças de status de um TCC.
      */
     public function historico(Tcc $tcc)
@@ -90,74 +161,6 @@ class TccController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-
         return view('tccs.historico', compact('tcc', 'historicos'));
-    }
-    /**
-     * Lista os TCCs com status "em andamento".
-     * Visível para todos os usuários exceto membros de banca.
-     */
-    public function emAndamento()
-    {
-        $tccs = Tcc::with(['orientador.user', 'orientandos.user'])
-            ->where('status', 'em_andamento')
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-
-        return view('tccs.em_andamento', compact('tccs'));
-    }
-     /**
-     * Exibe os detalhes de um TCC, incluindo o resultado final da banca.
-     * Acessível por todos os usuários.
-     */
-    public function show(Tcc $tcc)
-    {
-        $tcc->load([
-            'orientador.user',
-            'orientandos.user',
-            'banca.bancaMembros',
-            'banca.avaliacoes',
-        ]);
-
-
-        return view('tccs.show', compact('tcc'));
-    }
-     /**
-     * Atualiza os dados do TCC e registra no histórico se o status mudar.
-     */
-    public function update(Request $request, Tcc $tcc)
-    {
-        $dados = $request->validate([
-            'orientador_id' => ['nullable', 'exists:orientadores,id'],
-            'tema'          => ['required', 'min:3', 'max:255'],
-            'descricao'     => ['nullable', 'string'],
-            'status'        => ['required', 'in:em_andamento,concluido,cancelado,suspenso'],
-            'observacao'    => ['nullable', 'string', 'max:500'],
-        ]);
-
-
-        $statusAnterior = $tcc->status;
-
-
-        // 'observacao' é exclusivo do histórico — não pertence à tabela tccs
-        $tcc->update(\Arr::except($dados, ['observacao']));
-
-
-        // Registra no histórico somente se o status foi alterado
-        if ($statusAnterior !== $dados['status']) {
-            HistoricoTcc::create([
-                'tcc_id'          => $tcc->id,
-                'alterado_por'    => Auth::id(),
-                'status_anterior' => $statusAnterior,
-                'status_novo'     => $dados['status'],
-                'observacao'      => $request->input('observacao'),
-            ]);
-        }
-
-
-        return redirect()
-            ->route('tccs.show', $tcc)
-            ->with('sucesso', 'TCC atualizado com sucesso!');
     }
 }

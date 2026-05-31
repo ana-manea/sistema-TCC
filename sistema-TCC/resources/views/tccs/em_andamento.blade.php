@@ -4,81 +4,53 @@
 
 @section('content')
 
-    <div>
-        <div>
-            <h1>TCCs em Andamento</h1>
-        </div>
-
-        <div>
-            <a href="{{ route('tccs.index') }}">
-                <i class="bi bi-arrow-left"></i> Ver todos os TCCs
-            </a>
-        </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h1>TCCs em Andamento</h1>
+        <a href="{{ route('tccs.index') }}">← Ver todos os TCCs</a>
     </div>
 
-    {{-- Bloco de acesso restrito para membros de banca --}}
-    @if(auth()->check() && auth()->user()->funcao === 'membro_banca')
-        <div>
-            <i class="bi bi-lock-fill"></i>
-            Membros de banca não têm acesso à listagem de TCCs em andamento.
-        </div>
-    @else
-
-        @if($tccs->isEmpty())
-            <div>
-                <i class="bi bi-info-circle"></i> Nenhum TCC em andamento no momento.
-            </div>
-        @else
-            <div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Tema</th>
-                            <th>Orientador</th>
-                            <th>Orientando(s)</th>
-                            <th>Data de Cadastro</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        @foreach($tccs as $tcc)
-                            <tr>
-                                <td>
-                                    <strong>{{ $tcc->tema }}</strong>
-                                    @if($tcc->descricao)
-                                        <br>
-                                        <small>{{ Str::limit($tcc->descricao, 80) }}</small>
-                                    @endif
-                                </td>
-
-                                <td>
-                                    <i class="bi bi-person-badge"></i> 
-                                    {{ $tcc->orientador?->user?->name ?? 'A definir' }}
-                                </td>
-
-                                <td>
-                                    <i class="bi bi-person"></i>
-                                    @forelse($tcc->orientandos as $orientando)
-                                        {{ $orientando->user?->name }}@if(!$loop->last), @endif
-                                    @empty
-                                        A definir
-                                    @endforelse
-                                </td>
-
-                                <td>{{ $tcc->created_at->format('d/m/Y') }}</td>
-
-                                <td>
-                                    <a href="{{ route('tccs.show', $tcc) }}">
-                                        <i class="bi bi-eye"></i> Ver detalhes
-                                    </a>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        @endif
-
+    {{-- Mensagens de sessão --}}
+    @if(session('sucesso'))
+        <p style="color: green;"><strong>✔ {{ session('sucesso') }}</strong></p>
     @endif
+
+    @if($tccs->isEmpty())
+        <p>Nenhum TCC em andamento no momento.</p>
+    @else
+        <table border="1" cellpadding="8" style="width: 100%; border-collapse: collapse;">
+            <thead style="background-color: #f0f0f0;">
+                <tr>
+                    <th>#</th>
+                    <th>Tema</th>
+                    <th>Orientador</th>
+                    <th>Orientando(s)</th>
+                    <th>Data de Cadastro</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($tccs as $tcc)
+                    <tr>
+                        <td>{{ $tcc->id }}</td>
+                        <td>{{ $tcc->tema }}</td>
+                        <td>{{ $tcc->orientador?->user?->name ?? '—' }}</td>
+                        <td>
+                            @forelse($tcc->orientandos as $orientando)
+                                {{ $orientando->user?->name }}@if(!$loop->last), @endif
+                            @empty
+                                —
+                            @endforelse
+                        </td>
+                        <td>{{ $tcc->created_at?->format('d/m/Y') ?? 'Não informada' }}</td>
+                        <td>
+                            <a href="{{ route('tccs.show', $tcc) }}">Ver Detalhes</a>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        <p><strong>Total: {{ $tccs->count() }} TCC(s) em andamento.</strong></p>
+    @endif
+
 @endsection
