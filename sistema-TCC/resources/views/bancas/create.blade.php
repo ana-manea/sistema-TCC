@@ -1,46 +1,53 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastrar Nova Banca</title>
-</head>
-<body>
+@extends('layouts.app')
 
-    <h2>Cadastrar Nova Banca Avaliadora</h2>
-                    
-    <form action="{{ route('bancas.store') }}" method="POST">
-        @csrf 
+@section('title', 'Nova Banca')
 
-        <div>
-            <label for="tcc_id">Cód. TCC:</label>
-            <input type="number" name="tcc_id" id="tcc_id" required>
+@section('content')
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">Cadastrar Nova Banca Avaliadora</div>
+                        
+                <div class="card-body">
+                    <form action="{{ route('bancas.store') }}" method="POST">
+                        @csrf 
+
+                        <div class="mb-3">
+                            <label class="form-label"  for="tcc_id">Cód. TCC:</label>
+                            <input class="form-control" type="number" name="tcc_id" id="tcc_id" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="data_hora">Data e Hora:</label>
+                            <input class="form-control" type="datetime-local" name="data_hora" id="data_hora" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="local">Local:</label>
+                            <input class="form-control" type="text" name="local" id="local" placeholder="Ex: Sala 4 ou Link" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="status">Status Inicial:</label>
+                            <select class="form-select" name="status" id="status" required>
+                                <option value="agendada">Agendada</option>
+                                <option value="realizada">Realizada</option>
+                                <option value="cancelada">Cancelada</option>
+                            </select>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Salvar
+                            </button>
+                            
+                            <a role="button" href="{{ route('bancas.index') }}" class="btn btn-outline-secondary">
+                                Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-
-        <div>
-            <label for="data_hora">Data e Hora:</label>
-            <input type="datetime-local" name="data_hora" id="data_hora" required>
-        </div>
-
-        <div>
-            <label for="local">Local:</label>
-            <input type="text" name="local" id="local" placeholder="Ex: Sala 4 ou Link" required>
-        </div>
-
-        <div>
-            <label for="status">Status Inicial:</label>
-            <select name="status" id="status" required>
-                <option value="agendada">Agendada</option>
-                <option value="realizada">Realizada</option>
-                <option value="cancelada">Cancelada</option>
-            </select>
-        </div>
-
-        <div>
-            <a href="{{ route('bancas.index') }}">Cancelar</a>
-            <button type="submit">Salvar Banca</button>
-        </div>
-    </form>
-
-</body>
-</html>
+    </div>
+@endsection

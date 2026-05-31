@@ -1,42 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
-</head>
-<body>
+@extends('layouts.app')
+
+@section('title', 'Trabalhos')
+
+@section('content')
     @if(session('sucesso'))
         <div class="flash">{{ session('sucesso') }}</div>
     @endif
-    <h2>Listagem de TCCs</h2>
-    <a href="{{ route('tccs.create') }}">Novo Trabalho</a>
+
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h1 class="h3 mb-0">Trabalhos de Conclusão de Curso</h1>
+
+        <a class="btn btn-primary" href="{{ route('tccs.create') }}">
+            <i class="bi bi-plus-circle"></i> Novo Trabalho
+        </a>
+    </div>
+    
+
     @if($tccs->isEmpty())
-        <p>Nenhum tcc cadastrado.</p>
+        <div class="alert alert-secondary">Nenhum trabalho cadastrado.</div>
     @else
-        <table>
-            <thead>
-                <tr>
-                    <th>
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($tccs as $trabalho)
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead class="table-light">
                     <tr>
-                        <td>{{ $trabalho->tema }}</td>
-                        <td>{{ $trabalho->orientador_id }}</td>
-                        <td>{{ $trabalho->descricao }}</td>
-                        <td>{{ $trabalho->status }}</td>
-                        <td>{{ $trabalho->resultado_final }}</td>
-                        <td>{{ $trabalho->nota_final }}</td> <!-- colocar verificação de acordo com status para mostrar isso só depois de ser avaliado -->
-                        <td>{{ $trabalho->created_at }}</td>
-                        <td>{{ $trabalho->updated_at }}</td>
+                        <th>Tema</th>
+                        <th>Orientador</th>
+                        <th>Descrição</th>
+                        <th>Status</th>
+                        <th>Resultado Final</th>
+                        <th>Nota Final</th>
+                        <th>Criado em</th>
+                        <th>Atualizado em</th>
                     </tr>
-                @endforeach
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach($tccs as $trabalho)
+                        <tr>
+                            <td>{{ $trabalho->tema }}</td>
+                            <td>{{ $trabalho->orientador_id }}</td>
+                            <td>{{ $trabalho->descricao }}</td>
+                            <td>{{ $trabalho->status }}</td>
+                            <td>{{ $trabalho->resultado_final }}</td>
+                            <td>{{ $trabalho->nota_final }}</td> <!-- colocar verificação de acordo com status para mostrar isso só depois de ser avaliado -->
+                            <td>{{ $trabalho->created_at }}</td>
+                            <td>{{ $trabalho->updated_at }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
     @endif
-</body>
-</html>
+@endsection

@@ -8,6 +8,10 @@
         <h1 class="h3 mb-0">
             Professores Orientadores
         </h1>
+
+        <a class="btn btn-primary" href="{{ route('users.create', ['funcao' => 'orientador']) }}">
+            <i class="bi bi-plus-circle"></i> Novo Orientador
+        </a>
     </div>
 
     {{-- LISTA VAZIA --}}

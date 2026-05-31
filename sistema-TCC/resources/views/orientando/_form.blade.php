@@ -1,7 +1,7 @@
 @csrf
 
 <div class="student-block border rounded p-3 mb-3">
-    <div class="mb-2 fw-bold">Dados do Orientando</div>
+    <h5>Dados do Orientando</h5>
     <div class="mb-3">
         <label class="form-label">Matrícula (RA) *</label>
         <input type="text" name="matricula" class="form-control @error('matricula') is-invalid @enderror" value="{{ old('matricula', $orientando->matricula ?? '') }}" required>

@@ -23,7 +23,6 @@ class UserController extends Controller
             $funcao = $request->input('funcao');
         }
 
-
         return view('users.create')
             ->with('funcao', $funcao);
     }

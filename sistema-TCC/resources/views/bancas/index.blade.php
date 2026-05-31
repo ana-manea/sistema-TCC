@@ -1,15 +1,13 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Listagem de Bancas</title>
-</head>
-<body>
+@extends('layouts.app')
 
+@section('title', 'Bancas')
+
+@section('content')
     <h1>Bancas Avaliadoras</h1>
 
-    <a href="{{ route('bancas.create') }}">Nova Banca</a>
+    <a class="btn btn-primary" href="{{ route('bancas.create') }}">
+        <i class="bi bi-plus-circle"> Nova Banca
+    </a>
 
     @if(session('sucesso'))
         <p>{{ session('sucesso') }}</p>
@@ -81,6 +79,4 @@
             </tbody>
         </table>
     @endif
-
-</body>
-</html>
+@endsection

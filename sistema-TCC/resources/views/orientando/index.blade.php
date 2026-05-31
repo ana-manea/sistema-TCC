@@ -6,6 +6,9 @@
     <div class="d-flex align-items-center justify-content-between mb-3">
         <h1 class="h3 mb-0">Orientandos</h1>
 
+        <a class="btn btn-primary" href="{{ route('users.create', ['funcao' => 'orientando']) }}">
+            <i class="bi bi-plus-circle"></i> Novo Orientando
+        </a>
     </div>
 
     <!-- success flash handled in layout -->
