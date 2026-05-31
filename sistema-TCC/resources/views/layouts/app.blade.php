@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
         <div class="container">
             <a class="navbar-brand" href="{{ route('dashboard') }}">
                 <i class="bi bi-mortarboard"></i>
@@ -82,7 +82,7 @@
         </div>
     </nav>
 
-    <main class="container">
+    <main class="container-fluid">
         @if(session('sucesso'))
             <div class="alert alert-success alert-dismissible fade show mt-2" role="alert">
                 <i class="bi bi-check-circle"></i> {{ session('sucesso') }}
@@ -93,8 +93,8 @@
         @yield('content')
     </main>
 
-    <footer class="border-top mt-5 py-3">
-        <div class="container text-muted small">
+    <footer class="border-top py-3">
+        <div class="container text-muted small text-center">
             Fatec Prudente – Programação Web (Laravel)
         </div>
     </footer>
