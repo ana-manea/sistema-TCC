@@ -14,6 +14,15 @@ use App\Http\Controllers\OrientandoController;
 use App\Http\Controllers\TccController;
 use App\Http\Controllers\SolicitacaoOrientadorController;
 use App\Models\Orientador;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/', function () {
+    return view('welcome');
+});
+
+Route::get('/tccs/em-andamento', [TccController::class, 'emAndamento'])->name('tccs.em_andamento');
+
+Route::get('/tccs/{tcc}/historico', [TccController::class, 'historico'])->name('tccs.historico');
 
 
 // Sem autenticação

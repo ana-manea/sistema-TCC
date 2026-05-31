@@ -3,83 +3,161 @@
 namespace App\Http\Controllers;
 
 use App\Models\Tcc;
+use App\Models\HistoricoTcc;
+use App\Models\Orientador;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class TccController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Lista todos os TCCs cadastrados.
      */
     public function index()
     {
-        $tccs = Tcc::orderBy('created_at', 'desc')->get();
+        $tccs = Tcc::with(['orientador.user', 'orientandos.user'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return view('tccs.index', compact('tccs'));
     }
-
     /**
-     * Show the form for creating a new resource.
+     * Exibe o formulário de cadastro de um novo TCC.
      */
     public function create()
     {
-        return view('tccs.create');
-    }
+        $orientadores = Orientador::with('user')->get();
 
+        return view('tccs.create', compact('orientadores'));
+    }
     /**
-     * Store a newly created resource in storage.
+     * Salva um novo TCC no banco e registra o histórico inicial.
      */
     public function store(Request $request)
     {
         $dados = $request->validate([
-            'orientador_id'     => ['nullable'],
-            'tema'              => ['required', 'min:3', 'max:255'],
-            'descricao'         => ['nullable'],
-            'status'            => ['required']
+            'orientador_id' => ['nullable', 'exists:orientadores,id'],
+            'tema'          => ['required', 'min:3', 'max:255'],
+            'descricao'     => ['nullable', 'string'],
+            'status'        => ['required', 'in:em_andamento,concluido,cancelado,suspenso'],
         ]);
 
-        Tcc::create($dados);
+        $tcc = Tcc::create($dados);
 
-        return redirect()->route('tccs.index')->with('sucesso', 'Trabalho de Conclusão de Curso registrado!');
+        // Registra a criação no histórico
+        HistoricoTcc::create([
+            'tcc_id'          => $tcc->id,
+            'alterado_por'    => Auth::id(),
+            'status_anterior' => null,
+            'status_novo'     => $tcc->status,
+            'observacao'      => 'TCC criado.',
+        ]);
+
+        return redirect()
+            ->route('tccs.index')
+            ->with('sucesso', 'Trabalho de Conclusão de Curso registrado!');
     }
 
     /**
-     * Display the specified resource.
+     * Exibe o formulário de edição de um TCC existente.
      */
-    public function show(string $id)
+    public function edit(Tcc $tcc)
     {
-        //
+        $orientadores = Orientador::with('user')->get();
+
+        return view('tccs.edit', compact('tcc', 'orientadores'));
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Remove um TCC do sistema.
      */
-    public function edit(string $id)
+    public function destroy(Tcc $tcc)
     {
-        return view('tccs.edit');
+        $tcc->delete();
+
+        return redirect()
+            ->route('tccs.index')
+            ->with('sucesso', 'TCC removido com sucesso!');
     }
 
     /**
-     * Update the specified resource in storage.
+     * Exibe o histórico de mudanças de status de um TCC.
      */
-    public function update(Request $request, Tcc $trabalho)
+    public function historico(Tcc $tcc)
+    {
+        $historicos = HistoricoTcc::with('alteradoPor')
+            ->where('tcc_id', $tcc->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+
+        return view('tccs.historico', compact('tcc', 'historicos'));
+    }
+    /**
+     * Lista os TCCs com status "em andamento".
+     * Visível para todos os usuários exceto membros de banca.
+     */
+    public function emAndamento()
+    {
+        $tccs = Tcc::with(['orientador.user', 'orientandos.user'])
+            ->where('status', 'em_andamento')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+
+        return view('tccs.em_andamento', compact('tccs'));
+    }
+     /**
+     * Exibe os detalhes de um TCC, incluindo o resultado final da banca.
+     * Acessível por todos os usuários.
+     */
+    public function show(Tcc $tcc)
+    {
+        $tcc->load([
+            'orientador.user',
+            'orientandos.user',
+            'banca.bancaMembros',
+            'banca.avaliacoes',
+        ]);
+
+
+        return view('tccs.show', compact('tcc'));
+    }
+     /**
+     * Atualiza os dados do TCC e registra no histórico se o status mudar.
+     */
+    public function update(Request $request, Tcc $tcc)
     {
         $dados = $request->validate([
-            'orientador_id' => ['required'],
-            'tema'          => ['required', 'min:3'],
-            'descricao'     => ['nullable'],
-            'criado_em'     => ['required', 'date'],
-            'atualizado_em' => ['required', 'date']
+            'orientador_id' => ['nullable', 'exists:orientadores,id'],
+            'tema'          => ['required', 'min:3', 'max:255'],
+            'descricao'     => ['nullable', 'string'],
+            'status'        => ['required', 'in:em_andamento,concluido,cancelado,suspenso'],
+            'observacao'    => ['nullable', 'string', 'max:500'],
         ]);
 
-        $trabalho->update($dados);
 
-        return redirect()->route('tccs.index')->with('sucesso', 'Trabalho de Conclusão de Curso atualizado!');
-    }
+        $statusAnterior = $tcc->status;
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+
+        // 'observacao' é exclusivo do histórico — não pertence à tabela tccs
+        $tcc->update(\Arr::except($dados, ['observacao']));
+
+
+        // Registra no histórico somente se o status foi alterado
+        if ($statusAnterior !== $dados['status']) {
+            HistoricoTcc::create([
+                'tcc_id'          => $tcc->id,
+                'alterado_por'    => Auth::id(),
+                'status_anterior' => $statusAnterior,
+                'status_novo'     => $dados['status'],
+                'observacao'      => $request->input('observacao'),
+            ]);
+        }
+
+
+        return redirect()
+            ->route('tccs.show', $tcc)
+            ->with('sucesso', 'TCC atualizado com sucesso!');
     }
 }
