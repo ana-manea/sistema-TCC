@@ -15,9 +15,17 @@ class UserController extends Controller
         return view('users.index', compact('users'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        return view('users.create');
+        $funcao = 'users';
+
+        if($request->filled('funcao')) {
+            $funcao = $request->input('funcao');
+        }
+
+
+        return view('users.create')
+            ->with('funcao', $funcao);
     }
 
     public function store(Request $request)
