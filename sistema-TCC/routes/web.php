@@ -14,14 +14,11 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->name('dashboard');
+Route::get('/tccs/em-andamento', [TccController::class, 'emAndamento'])->name('tccs.em_andamento');
+
+Route::get('/tccs/{tcc}/historico', [TccController::class, 'historico'])->name('tccs.historico');
 
 Route::resource('tccs', TccController::class);
-
-
-
 
 Route::get('/bancas/{banca}/avaliar', [AvaliacaoBancaController::class, 'criar'])->name('avaliacoes.criar');
 

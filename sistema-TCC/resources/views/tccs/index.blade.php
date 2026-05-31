@@ -1,42 +1,99 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
-</head>
-<body>
-    @if(session('sucesso'))
-        <div class="flash">{{ session('sucesso') }}</div>
-    @endif
-    <h2>Listagem de TCCs</h2>
-    <a href="{{ route('tccs.create') }}">Novo Trabalho</a>
+@extends('layouts.app')
+
+@section('title', 'TCCs')
+
+@section('content')
+    <div>
+        <h1>Trabalhos de Conclusão de Curso</h1>
+
+        <div>
+            <a href="{{ route('tccs.em_andamento') }}">
+                <i class="bi bi-hourglass-split"></i> Em andamento
+            </a>
+            <a href="{{ route('tccs.create') }}">
+                <i class="bi bi-plus-circle"></i> Novo TCC
+            </a>
+        </div>
+    </div>
+
     @if($tccs->isEmpty())
-        <p>Nenhum tcc cadastrado.</p>
+        <div>Nenhum TCC cadastrado.</div>
     @else
-        <table>
-            <thead>
-                <tr>
-                    <th>
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($tccs as $trabalho)
+        <div>
+            <table>
+                <thead>
                     <tr>
-                        <td>{{ $trabalho->tema }}</td>
-                        <td>{{ $trabalho->orientador_id }}</td>
-                        <td>{{ $trabalho->descricao }}</td>
-                        <td>{{ $trabalho->status }}</td>
-                        <td>{{ $trabalho->resultado_final }}</td>
-                        <td>{{ $trabalho->nota_final }}</td> <!-- colocar verificação de acordo com status para mostrar isso só depois de ser avaliado -->
-                        <td>{{ $trabalho->created_at }}</td>
-                        <td>{{ $trabalho->updated_at }}</td>
+                        <th>Tema</th>
+                        <th>Orientador</th>
+                        <th>Orientando(s)</th>
+                        <th>Status</th>
+                        <th>Resultado</th>
+                        <th>Nota</th>
+                        <th>Ações</th>
                     </tr>
-                @endforeach
-            </tbody>
-        </table>
+                </thead>
+
+                <tbody>
+                    @foreach($tccs as $tcc)
+                        <tr>
+                            <td>{{ $tcc->tema }}</td>
+
+                            <td>{{ $tcc->orientador?->user?->name ?? '—' }}</td>
+
+                            <td>
+                                @forelse($tcc->orientandos as $orientando)
+                                    {{ $orientando->user?->name }}@if(!$loop->last), @endif
+                                @empty
+                                    —
+                                @endforelse
+                            </td>
+
+                            <td>
+                                <span>
+                                    {{ ucfirst(str_replace('_', ' ', $tcc->status)) }}
+                                </span>
+                            </td>
+
+                            <td>
+                                @if($tcc->resultado_final)
+                                    <span>
+                                        {{ ucfirst(str_replace('_', ' ', $tcc->resultado_final)) }}
+                                    </span>
+                                @else
+                                    <span>—</span>
+                                @endif
+                            </td>
+
+                            <td>
+                                {{ $tcc->nota_final ? number_format($tcc->nota_final, 2, ',', '') : '—' }}
+                            </td>
+
+                            <td>
+                                <a href="{{ route('tccs.show', $tcc) }}">
+                                    <i class="bi bi-eye"></i> Ver
+                                </a>
+
+                                <a href="{{ route('tccs.historico', $tcc) }}">
+                                    <i class="bi bi-clock-history"></i> Histórico
+                                </a>
+
+                                <a href="{{ route('tccs.edit', $tcc) }}">
+                                    <i class="bi bi-pencil-square"></i> Editar
+                                </a>
+
+                                <form action="{{ route('tccs.destroy', $tcc) }}" method="POST"
+                                      onsubmit="return confirm('Deseja realmente excluir este TCC?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit">
+                                        <i class="bi bi-trash"></i> Excluir
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
     @endif
-</body>
-</html>
+@endsection

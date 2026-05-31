@@ -3,83 +3,82 @@
 namespace App\Http\Controllers;
 
 use App\Models\Tcc;
+use App\Models\HistoricoTcc;
+use App\Models\Orientador;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class TccController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Lista todos os TCCs cadastrados.
      */
     public function index()
     {
-        $tccs = Tcc::orderBy('created_at', 'desc')->get();
+        $tccs = Tcc::with(['orientador.user', 'orientandos.user'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return view('tccs.index', compact('tccs'));
     }
-
     /**
-     * Show the form for creating a new resource.
+     * Exibe o formulário de cadastro de um novo TCC.
      */
     public function create()
     {
-        return view('tccs.create');
-    }
+        $orientadores = Orientador::with('user')->get();
 
+        return view('tccs.create', compact('orientadores'));
+    }
     /**
-     * Store a newly created resource in storage.
+     * Salva um novo TCC no banco e registra o histórico inicial.
      */
     public function store(Request $request)
     {
         $dados = $request->validate([
-            'orientador_id'     => ['nullable'],
-            'tema'              => ['required', 'min:3', 'max:255'],
-            'descricao'         => ['nullable'],
-            'status'            => ['required']
+            'orientador_id' => ['nullable', 'exists:orientadores,id'],
+            'tema'          => ['required', 'min:3', 'max:255'],
+            'descricao'     => ['nullable', 'string'],
+            'status'        => ['required', 'in:em_andamento,concluido,cancelado,suspenso'],
         ]);
 
-        Tcc::create($dados);
+        $tcc = Tcc::create($dados);
 
-        return redirect()->route('tccs.index')->with('sucesso', 'Trabalho de Conclusão de Curso registrado!');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        return view('tccs.edit');
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Tcc $trabalho)
-    {
-        $dados = $request->validate([
-            'orientador_id' => ['required'],
-            'tema'          => ['required', 'min:3'],
-            'descricao'     => ['nullable'],
-            'criado_em'     => ['required', 'date'],
-            'atualizado_em' => ['required', 'date']
+        // Registra a criação no histórico
+        HistoricoTcc::create([
+            'tcc_id'          => $tcc->id,
+            'alterado_por'    => Auth::id(),
+            'status_anterior' => null,
+            'status_novo'     => $tcc->status,
+            'observacao'      => 'TCC criado.',
         ]);
 
-        $trabalho->update($dados);
-
-        return redirect()->route('tccs.index')->with('sucesso', 'Trabalho de Conclusão de Curso atualizado!');
+        return redirect()
+            ->route('tccs.index')
+            ->with('sucesso', 'Trabalho de Conclusão de Curso registrado!');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Exibe o formulário de edição de um TCC existente.
      */
-    public function destroy(string $id)
+    public function edit(Tcc $tcc)
     {
-        //
+        $orientadores = Orientador::with('user')->get();
+
+        return view('tccs.edit', compact('tcc', 'orientadores'));
     }
+
+    /**
+     * Remove um TCC do sistema.
+     */
+    public function destroy(Tcc $tcc)
+    {
+        $tcc->delete();
+
+        return redirect()
+            ->route('tccs.index')
+            ->with('sucesso', 'TCC removido com sucesso!');
+    }
+
+  
 }
