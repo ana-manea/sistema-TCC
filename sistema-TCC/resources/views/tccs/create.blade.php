@@ -3,14 +3,14 @@
 @section('title', 'Novo TCC')
 
 @section('content')
-    <div>
-        <div>
-            <div>
-                <div>
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
                     <i class="bi bi-journal-plus"></i> Novo Trabalho de Conclusão de Curso
                 </div>
 
-                <div>
+                <div class="card-body">
                     <form action="{{ route('tccs.store') }}" method="POST">
                         @include('tccs._form')
 

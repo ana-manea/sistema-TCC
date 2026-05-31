@@ -17,7 +17,7 @@
                                 <i class="bi bi-check-circle"></i> Salvar
                             </button>
 
-                            <a class="btn btn-outline-secondary" href="{{ route('users.index') }}">
+                            <a role="button" class="btn btn-outline-secondary" href="{{ route('users.index') }}">
                                 Cancelar
                             </a>
                         </div>

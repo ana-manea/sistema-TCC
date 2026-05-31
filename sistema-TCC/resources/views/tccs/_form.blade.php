@@ -1,14 +1,14 @@
 @csrf
 
 <div>
-    <label>Tema</label>
-    <input type="text" name="tema"
+    <label class="form-label">Tema</label>
+    <input class="form-control" type="text" name="tema"
            value="{{ old('tema', $tcc->tema ?? '') }}">
     @error('tema') <div>{{ $message }}</div> @enderror
 </div>
 
 <div>
-    <label>Orientador</label>
+    <label class="form-label">Orientador</label>
     <select name="orientador_id">
         <option value="">— Sem orientador —</option>
         @foreach($orientadores as $orientador)
@@ -22,14 +22,14 @@
 </div>
 
 <div>
-    <label>Descrição</label>
-    <textarea name="descricao" rows="5">{{ old('descricao', $tcc->descricao ?? '') }}</textarea>
+    <label class="form-label">Descrição</label>
+    <textarea class="form-control" name="descricao" rows="5">{{ old('descricao', $tcc->descricao ?? '') }}</textarea>
     @error('descricao') <div>{{ $message }}</div> @enderror
 </div>
 
 <div>
-    <label>Status</label>
-    <select name="status">
+    <label class="form-label">Status</label>
+    <select class="form-select" name="status">
         <option value="em_andamento" @selected(old('status', $tcc->status ?? '') == 'em_andamento')>Em andamento</option>
         <option value="concluido"    @selected(old('status', $tcc->status ?? '') == 'concluido')>Concluído</option>
         <option value="cancelado"    @selected(old('status', $tcc->status ?? '') == 'cancelado')>Cancelado</option>
