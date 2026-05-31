@@ -11,6 +11,7 @@ use App\Http\Controllers\AvaliacaoBancaController;
 use App\Http\Controllers\BancaController;
 use App\Http\Controllers\OrientadorController;
 use App\Http\Controllers\OrientandoController;
+use App\Http\Controllers\TarefaController;
 use App\Http\Controllers\TccController;
 use App\Http\Controllers\SolicitacaoOrientadorController;
 use App\Models\Orientador;
@@ -67,6 +68,10 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::resource('tccs', TccController::class);
+
+Route::resource('tarefas', TarefaController::class)->except(['show']);
+Route::get('/aluno/tarefas', [TarefaController::class, 'indexOrientando'])
+    ->name('aluno.tarefas.index');
 
 
 Route::get('/bancas/{banca}/avaliar', [AvaliacaoBancaController::class, 'criar'])->name('avaliacoes.criar');
