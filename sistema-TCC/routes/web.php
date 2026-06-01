@@ -16,63 +16,48 @@ use App\Http\Controllers\TccController;
 use App\Http\Controllers\SolicitacaoOrientadorController;
 use App\Http\Controllers\ReuniaoController;
 use App\Http\Controllers\EntregaController;
+use App\Http\Controllers\ArquivoEntregaController; // ADICIONADO
 use App\Models\Orientador;
 
 // Sem autenticação
 Route::redirect('/', '/login');
 
-Route::get('/login', [LoginController::class, 'showLoginForm'])
-    ->name('login');
-
-Route::post('/login', [LoginController::class, 'login'])
-    ->name('login.attempt');
-
+Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [LoginController::class, 'login'])->name('login.attempt');
 
 // Com autenticação
 Route::middleware('auth')->group(function () {
-    Route::post('/logout', [LoginController::class, 'logout'])
-        ->name('logout');
+    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-    Route::get('/dashboard', [DashboardController::class, 'index'])
-        ->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/admin', [DashboardController::class, 'admin'])->name('dashboard.admin');
+    Route::get('/dashboard/orientador', [DashboardController::class, 'orientador'])->name('dashboard.orientador');
+    Route::get('/dashboard/orientando', [DashboardController::class, 'orientando'])->name('dashboard.orientando');
+    Route::get('/dashboard/banca', [DashboardController::class, 'banca'])->name('dashboard.banca');
 
-    Route::get('/dashboard/admin', [DashboardController::class, 'admin'])
-        ->name('dashboard.admin');
+    Route::get('/perfil', [UserController::class, 'perfil'])->name('users.perfil');
+    Route::get('/perfil/editar', [UserController::class, 'editarPerfil'])->name('users.perfil.edit');
+    Route::put('/perfil', [UserController::class, 'atualizarPerfil'])->name('users.perfil.update');
 
-    Route::get('/dashboard/orientador', [DashboardController::class, 'orientador'])
-        ->name('dashboard.orientador');
-
-    Route::get('/dashboard/orientando', [DashboardController::class, 'orientando'])
-        ->name('dashboard.orientando');
-
-    Route::get('/dashboard/banca', [DashboardController::class, 'banca'])
-        ->name('dashboard.banca');
-
-    Route::get('/perfil', [UserController::class, 'perfil'])
-        ->name('users.perfil');
-
-    Route::get('/perfil/editar', [UserController::class, 'editarPerfil'])
-        ->name('users.perfil.edit');
-
-    Route::put('/perfil', [UserController::class, 'atualizarPerfil'])
-        ->name('users.perfil.update');
-
+    // ── Reuniões ──────────────────────────────────────────────────────────────
     Route::resource('reunioes', ReuniaoController::class);
 
     Route::get('/orientador/reunioes', [ReuniaoController::class, 'indexOrientador'])
-    ->name('orientador.reunioes.index');
+        ->name('orientador.reunioes.index');
 
     Route::get('/aluno/reunioes', [ReuniaoController::class, 'indexOrientando'])
         ->name('aluno.reunioes.index');
-    
+
+    // ── Entregas ──────────────────────────────────────────────────────────────
     Route::resource('entregas', EntregaController::class);
 
     Route::get('/aluno/entregas', [EntregaController::class, 'indexOrientando'])
         ->name('aluno.entregas.index');
 
-    
-    // Bancas e Avaliações
-    
+    // ── Arquivos de Entrega (ADICIONADO) ──────────────────────────────────────
+    Route::resource('arquivos_entrega', ArquivoEntregaController::class);
+
+    // ── Bancas e Avaliações ───────────────────────────────────────────────────
     Route::resource('bancas', BancaController::class);
 
     Route::post('/bancas/{banca}/confirmar-realizada', [BancaController::class, 'confirmarRealizada'])
@@ -99,8 +84,6 @@ Route::middleware('auth')->group(function () {
     Route::put('/avaliacoes/{avaliacaoBanca}', [AvaliacaoBancaController::class, 'update'])
         ->name('avaliacoes.update');
 
-    // Fluxo legado: definir membros da banca separadamente.
-    // Pode remover depois se o create/edit com _form já estiver salvando os membros corretamente.
     Route::get('/bancas/{banca}/definir-membros', [BancaController::class, 'telaDefinirMembros'])
         ->name('bancas.definirMembros');
 
@@ -123,24 +106,17 @@ Route::get('/aluno/tarefas', [TarefaController::class, 'indexOrientando'])
 
 Route::resource('users', UserController::class);
 
-Route::resource('orientandos', OrientandoController::class)->except(['create','store']);
+Route::resource('orientandos', OrientandoController::class)->except(['create', 'store']);
 
 Route::controller(OrientadorController::class)->group(function () {
-    // pega automaticamente o primeiro orientador
     Route::get('/orientador', function () {
         $orientador = Orientador::first();
-
-        return redirect()->route(
-            'orientador.dashboard',
-            $orientador->id
-        );
+        return redirect()->route('orientador.dashboard', $orientador->id);
     });
 
-    // dashboard
     Route::get('/orientador/{orientador}/dashboard', 'dashboard')
         ->name('orientador.dashboard');
 
-    // meus orientandos
     Route::get('/orientador/{orientador}/meus-orientandos', 'meusOrientandos')
         ->name('orientador.meus_orientandos');
 });
@@ -149,31 +125,18 @@ Route::resource('orientadores', OrientadorController::class)
     ->parameters(['orientadores' => 'orientador']);
 
 Route::controller(SolicitacaoOrientadorController::class)->group(function () {
-    // Professor responder solicitação
-    Route::put(
-        '/solicitacoes_orientador/{solicitacaoOrientador}/responder',
-        'responder'
-    )->name('solicitacoes_orientador.responder');
+    Route::put('/solicitacoes_orientador/{solicitacaoOrientador}/responder', 'responder')
+        ->name('solicitacoes_orientador.responder');
 
-    // ALUNO
-    Route::get(
-        '/solicitacoes_orientando',
-        'indexOrientando'
-    )->name('solicitacoes_orientando.index');
+    Route::get('/solicitacoes_orientando', 'indexOrientando')
+        ->name('solicitacoes_orientando.index');
 
-    Route::get(
-        '/solicitacoes_orientando/create',
-        'createOrientando'
-    )->name('solicitacoes_orientando.create');
+    Route::get('/solicitacoes_orientando/create', 'createOrientando')
+        ->name('solicitacoes_orientando.create');
 
-    // PROFESSOR
-    Route::get(
-        '/orientador/{orientador}/solicitacoes',
-        'index'
-    )->name('solicitacoes_orientador.index');
+    Route::get('/orientador/{orientador}/solicitacoes', 'index')
+        ->name('solicitacoes_orientador.index');
 
-    Route::post(
-        '/solicitacoes_orientador',
-        'store'
-    )->name('solicitacoes_orientador.store');
+    Route::post('/solicitacoes_orientador', 'store')
+        ->name('solicitacoes_orientador.store');
 });
