@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Storage;
 
 class ArquivoEntregaController extends Controller
 {
+    // Lista todos os arquivos enviados
     public function index()
     {
         $arquivosEntrega = ArquivoEntrega::with('entrega.tcc.orientandos.user', 'enviadoPor')
@@ -21,12 +22,14 @@ class ArquivoEntregaController extends Controller
         return view('arquivos_entrega.index', compact('arquivosEntrega'));
     }
 
+    // Abre o formulário de upload
     public function create()
     {
         $entregas = $this->entregasPermitidasParaFormulario();
         return view('arquivos_entrega.create', compact('entregas'));
     }
 
+    // Faz o upload e salva o registro
     public function store(Request $request)
     {
         // CORRIGIDO: faz upload do arquivo de verdade
@@ -60,6 +63,7 @@ class ArquivoEntregaController extends Controller
         return redirect()->route($this->rota('arquivos_entrega.index'))->with('sucesso', 'Arquivo enviado com sucesso!');
     }
 
+    // Exibe detalhes de um arquivo
     public function show(ArquivoEntrega $arquivoEntrega)
     {
         $arquivoEntrega->load('entrega.tcc.orientandos.user', 'enviadoPor');
@@ -68,6 +72,7 @@ class ArquivoEntregaController extends Controller
         return view('arquivos_entrega.show', compact('arquivoEntrega'));
     }
 
+    // Abre o formulário de edição (só observação e status)
     public function edit(ArquivoEntrega $arquivoEntrega)
     {
         $arquivoEntrega->load('entrega.tcc');
@@ -77,6 +82,7 @@ class ArquivoEntregaController extends Controller
         return view('arquivos_entrega.edit', compact('arquivoEntrega', 'entregas'));
     }
 
+    // Atualiza observação e status de validação (não troca o arquivo)
     public function update(Request $request, ArquivoEntrega $arquivoEntrega)
     {
         $arquivoEntrega->load('entrega.tcc');
@@ -99,6 +105,7 @@ class ArquivoEntregaController extends Controller
         return redirect()->route($this->rota('arquivos_entrega.index'))->with('sucesso', 'Arquivo atualizado com sucesso!');
     }
 
+    // Remove o arquivo do disco e o registro do banco
     public function destroy(ArquivoEntrega $arquivoEntrega)
     {
         if (Auth::user()->funcao !== 'admin') {
