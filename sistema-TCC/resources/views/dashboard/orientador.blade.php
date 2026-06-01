@@ -28,12 +28,12 @@
         </div>
 
         <div class="row g-4">
-            @include('layouts.dashboard_card', ['rota' => route('orientador.orientandos.index'), 'icone' => 'bi bi-people', 'titulo' => 'Meus Orientandos', 'descricao' => 'Visualizar alunos vinculados, curso, semestre, título e status do TCC.'])
-            @include('layouts.dashboard_card', ['rota' => route('orientador.tccs.index'), 'icone' => 'bi bi-journal-text', 'titulo' => 'TCCs Orientados', 'descricao' => 'Acompanhar projetos, entregas, arquivos, banca, nota final e histórico.'])
+            @include('layouts.dashboard_card', ['rota' => ($orientador ? route('orientador.meus_orientandos', $orientador) : route('dashboard.orientador')), 'icone' => 'bi bi-people', 'titulo' => 'Meus Orientandos', 'descricao' => 'Visualizar alunos vinculados, curso, semestre, título e status do TCC.'])
+            @include('layouts.dashboard_card', ['rota' => route('tccs.index'), 'icone' => 'bi bi-journal-text', 'titulo' => 'TCCs Orientados', 'descricao' => 'Acompanhar projetos, entregas, arquivos, banca, nota final e histórico.'])
             @include('layouts.dashboard_card', ['rota' => route('orientador.reunioes.index'), 'icone' => 'bi bi-calendar-event', 'titulo' => 'Reuniões', 'descricao' => 'Agendar, registrar e visualizar reuniões com orientandos.'])
-            @include('layouts.dashboard_card', ['rota' => route('orientador.feedbacks.index'), 'icone' => 'bi bi-chat-left-text', 'titulo' => 'Feedbacks', 'descricao' => 'Criar feedbacks e acompanhar mensagens enviadas aos orientandos.'])
-            @include('layouts.dashboard_card', ['rota' => route('orientador.tarefas.index'), 'icone' => 'bi bi-check2-square', 'titulo' => 'Tarefas', 'descricao' => 'Definir tarefas, prazos e acompanhar status das atividades.'])
-            @include('layouts.dashboard_card', ['rota' => route('orientador.solicitacoes_orientador.index'), 'icone' => 'bi bi-envelope', 'titulo' => 'Solicitações', 'descricao' => 'Aceitar ou recusar solicitações de orientação conforme vagas disponíveis.'])
+            @include('layouts.dashboard_card', ['rota' => route('tccs.index'), 'icone' => 'bi bi-chat-left-text', 'titulo' => 'Feedbacks', 'descricao' => 'Criar feedbacks e acompanhar mensagens enviadas aos orientandos.'])
+            @include('layouts.dashboard_card', ['rota' => route('tarefas.index'), 'icone' => 'bi bi-check2-square', 'titulo' => 'Tarefas', 'descricao' => 'Definir tarefas, prazos e acompanhar status das atividades.'])
+            @include('layouts.dashboard_card', ['rota' => ($orientador ? route('solicitacoes_orientador.index', $orientador) : route('dashboard.orientador')), 'icone' => 'bi bi-envelope', 'titulo' => 'Solicitações', 'descricao' => 'Aceitar ou recusar solicitações de orientação conforme vagas disponíveis.'])
         </div>
     </section>
 </div>

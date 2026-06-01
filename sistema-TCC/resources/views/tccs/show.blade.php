@@ -80,7 +80,7 @@
 
                     <dt class="col-sm-4">Membros</dt>
                     <dd class="col-sm-8">
-                        @forelse($tcc->banca->bancaMembros as $membro)
+                        @forelse($tcc->banca->membros as $membro)
                             {{ $membro->user?->name }}
                             ({{ ucfirst(str_replace('_', ' ', $membro->papel)) }})@if(!$loop->last), @endif
                         @empty
