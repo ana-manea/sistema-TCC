@@ -6,24 +6,11 @@ use App\Models\Orientador;
 use App\Models\SolicitacaoOrientador;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class OrientadorController extends Controller
 {
-    // 1. DASHBOARD: Agora recebe o orientador pela URL
-    public function dashboard(Orientador $orientador)
-    {
-        // Contagem de orientandos ativos
-        $orientandosAtivosCount = $orientador->orientandos()->count();
-
-        // Contagem de solicitações pendentes para este orientador específico
-        $totalPendentes = SolicitacaoOrientador::where('orientador_id', $orientador->id)
-            ->where('status', 'pendente')
-            ->count();
-
-        return view('orientadores.dashboard', compact('orientador', 'orientandosAtivosCount', 'totalPendentes'));
-    }
-
-    // 2. LISTAR
+    // 2. LISTAR (Para administradores ou listagem pública)
     public function index()
     {
         $orientadores = Orientador::with('user')->withCount('orientandos')->latest()->get();
@@ -59,16 +46,18 @@ class OrientadorController extends Controller
         return view('orientadores.show', compact('orientador'));
     }
 
-    // 6. FORMULÁRIO DE EDIÇÃO
-    public function edit(Orientador $orientador)
+    // 6. FORMULÁRIO DE EDIÇÃO (Do próprio orientador logado)
+    public function edit()
     {
-        $orientador->load('user');
+        $orientador = Orientador::where('user_id', Auth::id())->firstOrFail();
         return view('orientadores.edit', compact('orientador'));
     }
 
-    // 7. ATUALIZAR
-    public function update(Request $request, Orientador $orientador)
+    // 7. ATUALIZAR (Do próprio orientador logado)
+    public function update(Request $request)
     {
+        $orientador = Orientador::where('user_id', Auth::id())->firstOrFail();
+
         $dados = $request->validate([
             'area_atuacao'    => ['required', 'string', 'max:255'],
             'disponibilidade' => ['required', 'string'],
@@ -77,14 +66,16 @@ class OrientadorController extends Controller
 
         $orientador->update($dados);
 
-        return redirect()->route('orientador.dashboard', $orientador->id)->with('sucesso', 'Perfil atualizado com sucesso!');
+        return redirect()->route('orientador.dashboard')->with('sucesso', 'Perfil atualizado com sucesso!');
     }
 
-    // 8. MEUS ORIENTANDOS: Agora recebe o orientador pela URL
-    public function meusOrientandos(Orientador $orientador)
+    // 8. MEUS ORIENTANDOS
+    public function meusOrientandos()
     {
+        $orientador = Orientador::where('user_id', Auth::id())->firstOrFail();
         $orientandos = $orientador->orientandos()->with('user')->get();
-        return view('orientadores.meus_orientandos',compact('orientador', 'orientandos'));
+        
+        return view('orientadores.meus_orientandos', compact('orientador', 'orientandos'));
     }
 
     // 9. EXCLUIR

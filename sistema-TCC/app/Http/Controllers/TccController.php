@@ -74,6 +74,7 @@ class TccController extends Controller
             'orientandos.user',
             'banca.membros.user',
             'banca.avaliacoes.avaliador',
+            'feedbacks.orientador.user',
         ]);
 
         return view('tccs.show', compact('tcc'));
