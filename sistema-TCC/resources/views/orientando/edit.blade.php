@@ -3,12 +3,16 @@
 @section('title', 'Editar Orientando')
 
 @section('content')
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="card">
-                <div class="card-header">Editar Orientando</div>
-
-                <div class="card-body">
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-start gap-4 align-items-center mb-3">
+        <a href="{{ route('orientandos.show', $orientando   ) }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Voltar ao Orientando
+        </a>
+        <h1 class="h3 mb-0 text-gray-800"><i class="bi bi-pencil-square me-2"></i> Editar Perfil do Orientando</h1>
+    </div>
+    <div class="row justify-content-center">
+        <div class="card shadow-sm">
+            <div class="card-body">
                     @if($errors->any())
                         <div class="alert alert-danger">
                             <strong>Corrija os campos abaixo:</strong>
@@ -47,10 +51,15 @@
                         @method('PUT')
 
                         @include('orientando._form', ['orientando' => $orientando])
+                        
+                        <div class="d-flex gap-2 border-top pt-3 mt-3">
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bi bi-check-circle me-1"></i> Salvar Alterações
+                            </button>
 
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary">Atualizar</button>
-                            <a class="btn btn-outline-secondary" href="{{ route('orientandos.index') }}">Cancelar</a>
+                            <a href="{{ route('orientandos.index') }}" class="btn btn-outline-secondary px-4">
+                                Cancelar
+                            </a>
                         </div>
                     </form>
                 </div>

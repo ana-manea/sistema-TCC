@@ -3,8 +3,20 @@
 @section('title', 'Dashboard do Orientador')
 
 @section('content')
-<div class="container-fluid">
     <div class="row">
+        @include('layouts.menu_dashboard', [
+            'usuario' => 'Orientador',
+            'opcoes'  => [
+                ['rota' => route('orientadores.edit', $orientador->id), 'icone' => 'bi bi-person-circle me-2', 'opcao' => 'Meu Perfil'],
+                ['rota' => route('orientador.meus_orientandos', $orientador->id), 'icone' => 'bi bi-people me-2', 'opcao' => 'Meus Orientandos'],
+                ['rota' => '#tccs', 'icone' => 'bi bi-book me-2', 'opcao' => 'Trabalhos Orientandos'],
+                ['rota' => '#reunioes', 'icone' => 'bi bi-calendar-event me-2', 'opcao' => 'Reuniões'],
+                ['rota' => '#feedbacks', 'icone' => 'bi bi-chat-left me-2', 'opcao' => 'Feedbacks'],
+                ['rota' => route('solicitacoes_orientador.index', $orientador->id), 'icone' => 'bi bi-envelope me-2', 'opcao' => 'Solicitações', 'extra' => $totalPendentes > 0 ? '<span class="badge bg-danger rounded-pill">'.$totalPendentes.'</span>' : ''],
+            ]
+        ])
+
+        {{--
         <div class="col-md-3 col-lg-2 px-0 bg-light border-end min-vh-100">
             <div class="p-3">
                 <h5 class="text-muted text-uppercase fs-7 fw-bold">Menu do Orientador</h5>
@@ -36,6 +48,7 @@
                 </a>
             </div>
         </div>
+        --}}
 
         <div class="col-md-9 col-lg-10 ps-md-4 py-4">
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -120,5 +133,4 @@
 
         </div>
     </div>
-</div>
 @endsection

@@ -1,21 +1,20 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Avaliar Banca</title>
-</head>
-<body>
+@extends('layouts.app')
 
-    <h1>Avaliação da Banca — TCC Nº {{ $banca->tcc_id }}</h1>
-    <hr>
-    @if ($errors->any())
-    @foreach ($errors->all() as $error)
-        {{ $error }}<br>
-    @endforeach
-    @endif
-    <form action="{{ route('avaliacoes.store', $banca->id) }}" method="POST">
-        @csrf
+@section('title', 'Nova Avaliação')
+
+@section('content')
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card-header">Avaliação da Banca — TCC Nº {{ $banca->tcc_id }}</div>
+            <hr>
+            @if ($errors->any())
+            @foreach ($errors->all() as $error)
+                {{ $error }}<br>
+            @endforeach
+            @endif
+            <div class="card-body">
+                <form action="{{ route('avaliacoes.store', $banca->id) }}" method="POST">
+                    @csrf
 
         <div style="margin-bottom: 15px;">
             <label for="nota" style="display: block; font-weight: bold;">Nota da Avaliação (0 a 10):</label>

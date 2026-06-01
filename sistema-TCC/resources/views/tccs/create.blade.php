@@ -1,18 +1,30 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
-</head>
-<body>
-    <h2>Criar TCC</h2>
-    
-    <form action="{{ route('tccs.store') }}" method="POST">
-        @include('tccs._form')
-        <button type="submit">Salvar</button>
-        <a href="{{ route('tccs.index') }}">Cancelar</a>
-    </form>
-</body>
-</html>
+@extends('layouts.app')
+
+@section('title', 'Novo TCC')
+
+@section('content')
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-journal-plus"></i> Novo Trabalho de Conclusão de Curso
+                </div>
+
+                <div class="card-body">
+                    <form action="{{ route('tccs.store') }}" method="POST">
+                        @include('tccs._form')
+
+                        <div>
+                            <button type="submit">
+                                <i class="bi bi-floppy"></i> Salvar
+                            </button>
+                            <a href="{{ route('tccs.index') }}">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection

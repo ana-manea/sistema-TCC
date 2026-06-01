@@ -1,47 +1,31 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editar Banca</title>
-</head>
-<body>
+@extends('layouts.app')
 
-    <h2>Editar Banca Avaliadora</h2>
-                    
-    <form action="{{ route('bancas.update', $banca->id) }}" method="POST">
-        @csrf 
-        @method('PUT')
+@section('title', 'Editar Banca')
 
-        <div>
-            <label for="tcc_id">Cód. TCC:</label>
-            <input type="number" name="tcc_id" id="tcc_id" value="{{ $banca->tcc_id }}" required>
+@section('content')
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">Editar Banca</div>
+
+                <div class="card-body">
+                    <form action="{{ route('bancas.update', $banca) }}" method="POST" class="vstack gap-3">
+                        @method('PUT')
+
+                        @include('bancas._form', ['banca' => $banca])
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Atualizar
+                            </button>
+
+                            <a role="button" href="{{ route('bancas.show', $banca) }}" class="btn btn-outline-secondary">
+                                Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-
-        <div>
-            <label for="data_hora">Data e Hora:</label>
-            <input type="datetime-local" name="data_hora" id="data_hora" value="{{ date('Y-m-d\TH:i', strtotime($banca->data_hora)) }}" required>
-        </div>
-
-        <div>
-            <label for="local">Local:</label>
-            <input type="text" name="local" id="local" value="{{ $banca->local }}" required>
-        </div>
-
-        <div>
-            <label for="status">Status da Banca:</label>
-            <select name="status" id="status" required>
-                <option value="agendada" {{ $banca->status == 'agendada' ? 'selected' : '' }}>Agendada</option>
-                <option value="realizada" {{ $banca->status == 'realizada' ? 'selected' : '' }}>Realizada</option>
-                <option value="cancelada" {{ $banca->status == 'cancelada' ? 'selected' : '' }}>Cancelada</option>
-            </select>
-        </div>
-
-        <div>
-            <a href="{{ route('bancas.index') }}">Cancelar</a>
-            <button type="submit">Atualizar Banca</button>
-        </div>
-    </form>
-
-</body>
-</html>
+    </div>
+@endsection

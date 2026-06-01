@@ -8,6 +8,7 @@
         <a href="{{ route('dashboard.orientador') }}" class="btn btn-outline-secondary btn-sm">
             <i class="bi bi-arrow-left"></i> Voltar ao Painel
         </a>
+        <h1 class="h3 mb-0 text-gray-800"><i class="bi bi-people me-2"></i>Meus Orientandos</h1>
     </div>
 
     @if($orientandos->isEmpty())

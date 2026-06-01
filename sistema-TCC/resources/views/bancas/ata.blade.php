@@ -1,45 +1,118 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ata de Defesa de TCC</title>
-</head>
-<body>
+@extends('layouts.app')
 
-    <h1>ATA DE DEFESA DE TRABALHO DE CONCLUSÃO DE CURSO (TCC)</h1>
-    <a href="{{ route('bancas.index') }}">Voltar para a Listagem</a>
-    <hr>
+@section('title', 'Ata da Banca')
 
-    <h2>Dados da Banca</h2>
-    <p><strong>Código do TCC:</strong> {{ $banca->tcc_id }}</p>
-    <p><strong>Data e Hora da Realização:</strong> {{ \Carbon\Carbon::parse($banca->data_hora)->format('d/m/Y H:i') }}</p>
-    <p><strong>Local:</strong> {{ $banca->local }}</p>
+@section('content')
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div>
+            <h1 class="h3 mb-0">Ata da Banca</h1>
+            <small class="text-muted">{{ $banca->tcc->tema ?? 'TCC #' . $banca->tcc_id }}</small>
+        </div>
 
-    <hr>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" onclick="window.print()">
+                <i class="bi bi-printer"></i> Imprimir
+            </button>
 
-    <h2>Membros da Banca Avaliadora</h2>
-    <ul>
-        @foreach($membros as $membro)
-            <li>Usuário ID: {{ $membro->usuario_id }} - Papel: {{ ucfirst($membro->papel) }}</li>
-        @endforeach
-    </ul>
+            <a href="{{ route('bancas.show', $banca) }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
 
-    <hr>
+    <div class="card">
+        <div class="card-body">
+            <h2 class="h4 text-center mb-4">ATA DE DEFESA DE TRABALHO DE CONCLUSÃO DE CURSO</h2>
 
-    <h2>Resultado e Deliberação Final</h2>
-    <p>Após a apresentação do trabalho e a avaliação individual dos membros, a banca deliberou o seguinte resultado:</p>
-    
-    <ul>
-        <li><strong>Média Final Consolidada:</strong> {{ number_format($banca->nota_final, 2, ',', '.') }}</li>
-        <li><strong>Veredito:</strong> {{ strtoupper($banca->resultado_final) }}</li>
-    </ul>
+            <h3 class="h5">Dados do TCC</h3>
+            <table class="table table-bordered align-middle">
+                <tr>
+                    <th width="30%">Tema</th>
+                    <td>{{ $banca->tcc->tema ?? '—' }}</td>
+                </tr>
+                <tr>
+                    <th>Descrição</th>
+                    <td>{{ $banca->tcc->descricao ?? '—' }}</td>
+                </tr>
+                <tr>
+                    <th>Orientador</th>
+                    <td>{{ $banca->tcc->orientador?->user?->name ?? '—' }}</td>
+                </tr>
+                <tr>
+                    <th>Orientando(s)</th>
+                    <td>
+                        @forelse($banca->tcc->orientandos as $orientando)
+                            {{ $orientando->user?->name }}@if(!$loop->last), @endif
+                        @empty
+                            —
+                        @endforelse
+                    </td>
+                </tr>
+            </table>
 
-    <h3>Parecer Final / Justificativa da Banca:</h3>
-    <p>{{ $banca->parecer_final }}</p>
+            <h3 class="h5 mt-4">Dados da Banca</h3>
+            <table class="table table-bordered align-middle">
+                <tr>
+                    <th width="30%">Data e Hora</th>
+                    <td>{{ optional($banca->data_hora)->format('d/m/Y H:i') }}</td>
+                </tr>
+                <tr>
+                    <th>Local / Link</th>
+                    <td>{{ $banca->local }}</td>
+                </tr>
+            </table>
 
-    <hr>
-    <p>*Documento encerrado e assinado eletronicamente pelo Presidente da Banca.*</p>
+            <h3 class="h5 mt-4">Membros da Banca Avaliadora</h3>
+            <ul class="list-group mb-4">
+                @foreach($banca->membros as $membro)
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>{{ $membro->user?->name ?? 'ID ' . $membro->user_id }}</span>
+                        <strong>{{ ucfirst(str_replace('_', ' ', $membro->papel)) }}</strong>
+                    </li>
+                @endforeach
+            </ul>
 
-</body>
-</html>
+            <h3 class="h5 mt-4">Avaliações Individuais</h3>
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Avaliador</th>
+                            <th>Nota</th>
+                            <th>Parecer</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($banca->avaliacoes->unique('avaliador_id') as $avaliacao)
+                            <tr>
+                                <td>{{ $avaliacao->avaliador?->name ?? '—' }}</td>
+                                <td>{{ number_format((float) $avaliacao->nota, 2, ',', '.') }}</td>
+                                <td>{{ $avaliacao->parecer }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 class="h5 mt-4">Resultado e Deliberação Final</h3>
+            <ul class="list-group mb-4">
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>Nota Final</span>
+                    <strong>{{ number_format((float) $banca->nota_final, 2, ',', '.') }}</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span>Resultado Final</span>
+                    <strong>{{ strtoupper(str_replace('_', ' ', $banca->resultado_final)) }}</strong>
+                </li>
+            </ul>
+
+            <h4 class="h6">Parecer Final / Justificativa da Banca</h4>
+            <p class="border rounded p-3 bg-light">{{ $banca->parecer_final }}</p>
+
+            <hr>
+            <p class="small text-muted mb-0">
+                Documento encerrado e assinado eletronicamente pelo Presidente da Banca.
+            </p>
+        </div>
+    </div>
+@endsection

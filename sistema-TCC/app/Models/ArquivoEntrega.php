@@ -17,7 +17,7 @@ class ArquivoEntrega extends Model
         return $this->belongsTo(Entrega::class, 'entrega_id');
     }
 
-    public function usuarioEnvio()
+    public function enviadoPor()
     {
         return $this->belongsTo(User::class, 'enviado_por');
     }
