@@ -46,7 +46,15 @@ class TccController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $tcc->load([
+            'orientador.user',
+            'orientandos.user',
+            'banca.membros.user',
+            'banca.avaliacoes.avaliador',
+            'feedbacks.orientador.user',
+        ]);
+
+        return view('tccs.show', compact('tcc'));
     }
 
     /**

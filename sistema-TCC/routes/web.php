@@ -4,6 +4,8 @@ use App\Http\Controllers\AvaliacaoBancaController;
 use App\Http\Controllers\BancaController;
 use App\Http\Controllers\OrientadorController;
 use App\Http\Controllers\OrientandoController;
+use App\Http\Controllers\TarefaController;
+use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\TccController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SolicitacaoOrientadorController;
@@ -46,22 +48,6 @@ Route::resource('users', UserController::class);
 Route::resource('orientandos', OrientandoController::class)->except(['create','store']);
 Route::controller(OrientadorController::class)->group(function () {
 
-    // pega automaticamente o primeiro orientador
-    Route::get('/orientador', function () {
-
-        $orientador = Orientador::first();
-
-        return redirect()->route(
-            'orientador.dashboard',
-            $orientador->id
-        );
-
-    });
-
-    // dashboard
-    Route::get('/orientador/{orientador}/dashboard', 'dashboard')
-        ->name('orientador.dashboard');
-
     // meus orientandos
     Route::get('/orientador/{orientador}/meus-orientandos', 'meusOrientandos')
         ->name('orientador.meus_orientandos');
@@ -87,14 +73,8 @@ Route::controller(SolicitacaoOrientadorController::class)->group(function () {
         'createOrientando'
     )->name('solicitacoes_orientando.create');
 
-    // PROFESSOR
-    Route::get(
-        '/orientador/{orientador}/solicitacoes',
-        'index'
-    )->name('solicitacoes_orientador.index');
-
-    Route::post(
-        '/solicitacoes_orientador',
-        'store'
-    )->name('solicitacoes_orientador.store');
+    Route::post('/solicitacoes_orientador', 'store')
+        ->name('solicitacoes_orientador.store');
 });
+
+Route::resource('feedbacks', FeedbackController::class);

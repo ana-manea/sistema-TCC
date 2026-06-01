@@ -4,9 +4,8 @@
 
 @section('content')
 <div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 text-gray-800"><i class="bi bi-envelope-open me-2"></i>Solicitações de Orientação</h1>
-        <a href="{{ route('orientador.dashboard', $orientador->id) }}" class="btn btn-outline-secondary btn-sm">
+    <div class="d-flex justify-content-start gap-4 align-items-center mb-4">
+        <a href="{{ route('dashboard.orientador') }}" class="btn btn-outline-secondary btn-sm">
             <i class="bi bi-arrow-left"></i> Voltar ao Painel
         </a>
     </div>
