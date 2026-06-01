@@ -38,12 +38,12 @@
         @endif
 
         <div class="row g-4">
-            @include('layouts.dashboard_card', ['rota' => route('aluno.tccs.index'), 'icone' => 'bi bi-journal-text', 'titulo' => 'Meu TCC / Projeto', 'descricao' => 'Criar, editar e visualizar dados do projeto, orientador, banca e resultado final.'])
-            @include('layouts.dashboard_card', ['rota' => route('aluno.feedbacks.index'), 'icone' => 'bi bi-chat-left-text', 'titulo' => 'Feedbacks', 'descricao' => 'Visualizar feedbacks enviados pelo orientador.'])
+            @include('layouts.dashboard_card', ['rota' => route('tccs.index'), 'icone' => 'bi bi-journal-text', 'titulo' => 'Meu TCC / Projeto', 'descricao' => 'Criar, editar e visualizar dados do projeto, orientador, banca e resultado final.'])
+            @include('layouts.dashboard_card', ['rota' => route('tccs.index'), 'icone' => 'bi bi-chat-left-text', 'titulo' => 'Feedbacks', 'descricao' => 'Visualizar feedbacks enviados pelo orientador.'])
             @include('layouts.dashboard_card', ['rota' => route('aluno.tarefas.index'), 'icone' => 'bi bi-check2-square', 'titulo' => 'Tarefas', 'descricao' => 'Acompanhar tarefas atribuídas, prazos e status.'])
             @include('layouts.dashboard_card', ['rota' => route('aluno.reunioes.index'), 'icone' => 'bi bi-calendar-event', 'titulo' => 'Reuniões', 'descricao' => 'Visualizar reuniões agendadas e registros.'])
-            @include('layouts.dashboard_card', ['rota' => route('aluno.entregas.index'), 'icone' => 'bi bi-folder', 'titulo' => 'Entregas / Arquivos', 'descricao' => 'Enviar documentos, consultar entregas e versões anteriores.'])
-            @include('layouts.dashboard_card', ['rota' => route('aluno.solicitacoes_orientador.index'), 'icone' => 'bi bi-person-plus', 'titulo' => 'Solicitar Orientador', 'descricao' => 'Enviar solicitação para orientador com vagas disponíveis.'])
+            {{-- @include('layouts.dashboard_card', ['rota' => route('aluno.entregas.index'), 'icone' => 'bi bi-folder', 'titulo' => 'Entregas / Arquivos', 'descricao' => 'Enviar documentos, consultar entregas e versões anteriores.'])  --}}
+            @include('layouts.dashboard_card', ['rota' => route('solicitacoes_orientando.index'), 'icone' => 'bi bi-person-plus', 'titulo' => 'Solicitar Orientador', 'descricao' => 'Enviar solicitação para orientador com vagas disponíveis.'])
         </div>
     </section>
 </div>

@@ -3,89 +3,80 @@
 @section('title', 'Reuniões')
 
 @section('content')
-@php
-    $modoAtual = $modo ?? 'admin';
-
-    $corStatus = [
-        'agendada'  => 'warning',
-        'realizada' => 'success',
-        'cancelada' => 'danger',
-    ];
-@endphp
-
-<div class="container-fluid py-4">
     <div class="d-flex align-items-center justify-content-between mb-3">
-        <h1 class="h3 mb-0">
-            <i class="bi bi-calendar-event"></i> Reuniões de Orientação
-        </h1>
+        <div>
+            <h1 class="h3 mb-0">Reuniões</h1>
+            <small class="text-muted">Agende, acompanhe e registre reuniões de orientação.</small>
+        </div>
 
-        @if($modoAtual !== 'orientando')
-            <a class="btn btn-primary" href="{{ route('reunioes.create') }}">
+        @if(auth()->user()->funcao !== 'orientando')
+            <a href="{{ route('reunioes.create') }}" class="btn btn-primary">
                 <i class="bi bi-plus-circle"></i> Nova Reunião
             </a>
         @endif
     </div>
 
-    <div class="card shadow-sm">
+    @if(session('sucesso'))
+        <div class="alert alert-success">{{ session('sucesso') }}</div>
+    @endif
+
+    @if(session('erro'))
+        <div class="alert alert-danger">{{ session('erro') }}</div>
+    @endif
+
+    <div class="card">
         <div class="card-body">
             @if($reunioes->isEmpty())
-                <div class="alert alert-secondary mb-0">
-                    <i class="bi bi-info-circle"></i> Nenhuma reunião cadastrada.
-                </div>
+                <div class="alert alert-secondary mb-0">Nenhuma reunião cadastrada.</div>
             @else
-            <div class="table-responsive">
-                <table class="table table-striped align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>TCC</th>
-                            <th>Data e Hora</th>
-                            <th>Local</th>
-                            <th>Status</th>
-                            <th>Próximos Passos</th>
-                            @if($modoAtual !== 'orientando')
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>TCC</th>
+                                <th>Data/Hora</th>
+                                <th>Local</th>
+                                <th>Status</th>
                                 <th class="text-end">Ações</th>
-                            @endif
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($reunioes as $reuniao)
-                        <tr>
-                            <td class="fw-medium">{{ $reuniao->tcc->tema ?? '—' }}</td>
-                            <td>{{ $reuniao->data_hora->format('d/m/Y H:i') }}</td>
-                            <td>{{ $reuniao->local ?? '—' }}</td>
-                            <td>
-                                <span class="badge bg-{{ $corStatus[$reuniao->status] ?? 'secondary' }}">
-                                    {{ ucfirst($reuniao->status) }}
-                                </span>
-                            </td>
-                            <td>{{ $reuniao->proximos_passos ? \Str::limit($reuniao->proximos_passos, 50) : '—' }}</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($reunioes as $reuniao)
+                                <tr>
+                                    <td>{{ $reuniao->tcc->tema ?? 'TCC #' . $reuniao->tcc_id }}</td>
+                                    <td>{{ optional($reuniao->data_hora)->format('d/m/Y H:i') }}</td>
+                                    <td>{{ $reuniao->local ?? '-' }}</td>
+                                    <td>
+                                        <span class="badge bg-secondary">
+                                            {{ ucfirst(str_replace('_', ' ', $reuniao->status)) }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{{ route('reunioes.show', $reuniao) }}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="bi bi-eye"></i> Ver
+                                        </a>
 
-                            @if($modoAtual !== 'orientando')
-                            <td class="text-end">
-                                <a class="btn btn-sm btn-outline-primary"
-                                    href="{{ route('reunioes.edit', $reuniao) }}">
-                                    <i class="bi bi-pencil-square"></i> Editar
-                                </a>
+                                        @if(auth()->user()->funcao !== 'orientando')
+                                            <a href="{{ route('reunioes.edit', $reuniao) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-pencil-square"></i> Editar
+                                            </a>
 
-                                <form class="d-inline"
-                                    action="{{ route('reunioes.destroy', $reuniao) }}"
-                                    method="POST"
-                                    onsubmit="return confirm('Deseja excluir esta reunião?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="btn btn-sm btn-outline-danger" type="submit">
-                                        <i class="bi bi-trash"></i> Excluir
-                                    </button>
-                                </form>
-                            </td>
-                            @endif
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+                                            <form action="{{ route('reunioes.destroy', $reuniao) }}" method="POST" class="d-inline"
+                                                  onsubmit="return confirm('Excluir esta reunião?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    <i class="bi bi-trash"></i> Excluir
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             @endif
         </div>
     </div>
-</div>
 @endsection

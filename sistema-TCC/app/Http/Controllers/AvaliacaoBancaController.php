@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Banca;
 use App\Models\AvaliacaoBanca;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AvaliacaoBancaController extends Controller
 {
@@ -18,10 +19,10 @@ class AvaliacaoBancaController extends Controller
      */
     public function criar($banca_id)
     {
-        $banca = Banca::with(['tcc.orientandos.user', 'bancaMembros'])->findOrFail($banca_id);
+        $banca = Banca::with(['tcc.orientandos.user', 'membros'])->findOrFail($banca_id);
 
         // Só membros da banca acessam
-        $fazParteDaBanca = $banca->bancaMembros->contains('user_id', auth()->id());
+        $fazParteDaBanca = $banca->membros->contains('user_id', Auth::id());
         if (!$fazParteDaBanca) {
             return redirect()->route('bancas.index')
                 ->with('erro', 'Você não está cadastrado como membro avaliador desta banca.');
@@ -58,12 +59,12 @@ class AvaliacaoBancaController extends Controller
             'parecer.required' => 'O parecer descritivo é obrigatório.',
         ]);
 
-        $banca = Banca::with(['tcc.orientandos', 'bancaMembros'])->findOrFail($banca_id);
+        $banca = Banca::with(['tcc.orientandos', 'membros'])->findOrFail($banca_id);
 
-        $avaliadorId = auth()->id();
+        $avaliadorId = Auth::id();
 
         // Confirma que o avaliador é membro desta banca
-        $fazParteDaBanca = $banca->bancaMembros->contains('user_id', $avaliadorId);
+        $fazParteDaBanca = $banca->membros->contains('user_id', $avaliadorId);
         if (!$fazParteDaBanca) {
             return redirect()->route('bancas.index')
                 ->with('erro', 'Você não está cadastrado como membro avaliador desta banca.');
@@ -110,7 +111,7 @@ class AvaliacaoBancaController extends Controller
      */
     public function edit(AvaliacaoBanca $avaliacaoBanca)
     {
-        if ($avaliacaoBanca->avaliador_id !== auth()->id()) {
+        if ($avaliacaoBanca->avaliador_id !== Auth::id()) {
             return redirect()->route('bancas.index')
                 ->with('erro', 'Você só pode editar a sua própria avaliação.');
         }
@@ -131,7 +132,7 @@ class AvaliacaoBancaController extends Controller
      */
     public function update(Request $request, AvaliacaoBanca $avaliacaoBanca)
     {
-        if ($avaliacaoBanca->avaliador_id !== auth()->id()) {
+        if ($avaliacaoBanca->avaliador_id !== Auth::id()) {
             return redirect()->route('bancas.index')
                 ->with('erro', 'Você só pode editar a sua própria avaliação.');
         }
