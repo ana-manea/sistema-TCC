@@ -26,6 +26,7 @@ class ReuniaoController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
         $orientador = $user->orientador;
+
         $reunioes = Reuniao::with('tcc')
             ->whereHas('tcc', fn($q) => $q->where('orientador_id', $orientador->id))
             ->latest('data_hora')
@@ -55,51 +56,9 @@ class ReuniaoController extends Controller
         ]);
     }
 
-    // Lista reuniões dos TCCs orientados pelo orientador logado
-    public function indexOrientador()
-    {
-        $user = Auth::user();
-        $orientador = $user->orientador;
-
-        $reunioes = Reuniao::with('tcc')
-            ->when($orientador, function ($query) use ($orientador) {
-                $query->whereHas('tcc', function ($q) use ($orientador) {
-                    $q->where('orientador_id', $orientador->id);
-                });
-            })
-            ->latest('data_hora')
-            ->get();
-
-        return view('reunioes.index', compact('reunioes'));
-    }
-
-    // Lista reuniões dos TCCs do orientando logado
-    public function indexOrientando()
-    {
-        $user = Auth::user();
-        $orientando = $user->orientando;
-
-        $tccIds = $orientando
-            ? $orientando->tccs()->pluck('tccs.id')
-            : collect();
-
-        $reunioes = Reuniao::with('tcc')
-            ->when($tccIds->isNotEmpty(), function ($query) use ($tccIds) {
-                $query->whereIn('tcc_id', $tccIds);
-            })
-            ->when($tccIds->isEmpty(), function ($query) {
-                $query->whereRaw('1 = 0');
-            })
-            ->latest('data_hora')
-            ->get();
-
-        return view('reunioes.index', compact('reunioes'));
-    }
-
-    // Abre o formulário de cadastro
+    // Abre o formulário de cadastro (agendar reunião)
     public function create()
     {
-        // Só exibe TCCs em andamento no select
         $tccs = Tcc::where('status', 'em_andamento')->orderBy('tema')->get();
 
         return view('reunioes.create', compact('tccs'));
@@ -131,7 +90,7 @@ class ReuniaoController extends Controller
         return view('reunioes.show', compact('reuniao'));
     }
 
-    // Abre o formulário de edição
+    // Abre o formulário de edição (registrar reunião / próximos passos)
     public function edit(Reuniao $reuniao)
     {
         $tccs = Tcc::orderBy('tema')->get();
@@ -139,7 +98,7 @@ class ReuniaoController extends Controller
         return view('reunioes.edit', compact('reuniao', 'tccs'));
     }
 
-    // Atualiza a reunião
+    // Atualiza a reunião (registra observações e próximos passos)
     public function update(Request $request, Reuniao $reuniao)
     {
         $dados = $request->validate([
