@@ -34,7 +34,6 @@
                                 <i class="bi bi-person-circle"></i> Perfil
                             </a>
                         </li>
-
                         <li class="nav-item">
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf

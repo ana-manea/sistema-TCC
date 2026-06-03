@@ -6,7 +6,9 @@
     <div class="row">
         <div class="col-lg-8">
             <div class="card">
-                <div class="card-header">Nova Reunião</div>
+                <div class="card-header">
+                    <i class="bi bi-calendar-plus"></i> Nova Reunião
+                </div>
 
                 <div class="card-body">
                     <form action="{{ route('reunioes.store') }}" method="POST" class="vstack gap-3">
@@ -16,9 +18,7 @@
                             <button type="submit" class="btn btn-primary">
                                 <i class="bi bi-check-circle"></i> Salvar
                             </button>
-
-                            <a href="{{ route('reunioes.index') }}" class="btn btn-outline-secondary">
-                                Cancelar
+                            <a class="btn btn-outline-secondary" href="{{ route('reunioes.index') }}">
                             </a>
                         </div>
                     </form>

@@ -1,5 +1,4 @@
 @csrf
-
 @php
     $funcaoSelecionada = old('funcao', $user->funcao ?? '');
 @endphp
@@ -138,6 +137,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const selectFuncao = document.getElementById('funcao');
     const camposOrientador = document.getElementById('campos-orientador');
     const camposOrientando = document.getElementById('campos-orientando');
+
+    if (!selectFuncao || !camposOrientador || !camposOrientando) {
+        return;
+    }
 
     function atualizarCampos() {
         camposOrientador.style.display = 'none';

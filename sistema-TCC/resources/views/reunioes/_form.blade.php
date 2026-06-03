@@ -1,12 +1,28 @@
 @csrf
+@php
+    $dataHoraValor = '';
+    if (!empty($reuniao?->data_hora)) {
+        $dataHoraValor = \Carbon\Carbon::parse($reuniao->data_hora)->format('Y-m-d\TH:i');
+    }
+@endphp
 
 <div class="mb-3">
     <label class="form-label">TCC</label>
     <select name="tcc_id" class="form-select @error('tcc_id') is-invalid @enderror" required>
-        <option value="">Selecione o TCC</option>
+        <option value="">— Selecione —</option>
         @foreach($tccs as $tcc)
+            @php
+                $orientadorNome = $tcc->orientador?->user?->name ?? '—';
+                $orientandosNomes = $tcc->orientandos
+                    ->map(function ($orientando) {
+                        return $orientando->user?->name;
+                    })
+                    ->filter()
+                    ->implode(', ');
+                $orientandosLabel = $orientandosNomes !== '' ? $orientandosNomes : '—';
+            @endphp
             <option value="{{ $tcc->id }}" @selected(old('tcc_id', $reuniao->tcc_id ?? '') == $tcc->id)>
-                {{ $tcc->tema }}
+                {{ $tcc->tema }} — Orientador: {{ $orientadorNome }} — Orientando(s): {{ $orientandosLabel }}
             </option>
         @endforeach
     </select>
@@ -18,7 +34,7 @@
     <input type="datetime-local"
            name="data_hora"
            class="form-control @error('data_hora') is-invalid @enderror"
-           value="{{ old('data_hora', isset($reuniao) && $reuniao->data_hora ? $reuniao->data_hora->format('Y-m-d\TH:i') : '') }}"
+           value="{{ old('data_hora', $dataHoraValor) }}"
            required>
     @error('data_hora') <div class="invalid-feedback">{{ $message }}</div> @enderror
 </div>
@@ -28,8 +44,10 @@
     <input type="text"
            name="local"
            class="form-control @error('local') is-invalid @enderror"
-           value="{{ old('local', $reuniao->local ?? '') }}">
+           value="{{ old('local', $reuniao->local ?? '') }}"
+           maxlength="255">
     @error('local') <div class="invalid-feedback">{{ $message }}</div> @enderror
+</div>
 </div>
 
 <div class="mb-3">

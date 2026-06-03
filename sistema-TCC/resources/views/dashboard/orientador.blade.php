@@ -26,7 +26,6 @@
                 </div>
             @endforeach
         </div>
-
         <div class="row g-4">
             @include('layouts.dashboard_card', ['rota' => ($orientador ? route('orientador.meus_orientandos', $orientador) : route('dashboard.orientador')), 'icone' => 'bi bi-people', 'titulo' => 'Meus Orientandos', 'descricao' => 'Visualizar alunos vinculados, curso, semestre, título e status do TCC.'])
             @include('layouts.dashboard_card', ['rota' => route('tccs.index'), 'icone' => 'bi bi-journal-text', 'titulo' => 'TCCs Orientados', 'descricao' => 'Acompanhar projetos, entregas, arquivos, banca, nota final e histórico.'])

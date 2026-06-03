@@ -26,7 +26,6 @@
                 </div>
             @endforeach
         </div>
-
         @if($solicitacao)
             <div class="alert alert-info">
                 <strong>Última solicitação de orientador:</strong>
