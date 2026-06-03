@@ -4,10 +4,8 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
-
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserController;
-
 use App\Http\Controllers\AvaliacaoBancaController;
 use App\Http\Controllers\BancaController;
 use App\Http\Controllers\OrientadorController;
@@ -47,7 +45,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/perfil', [UserController::class, 'atualizarPerfil'])->name('users.perfil.update');
 
     // ── Reuniões ───────────────────────────────────────────────────────────────
-    Route::resource('reunioes', ReuniaoController::class);
+    Route::resource('reunioes', ReuniaoController::class)->parameters(['reunioes' => 'reuniao']);
     Route::get('/orientador/reunioes', [ReuniaoController::class, 'indexOrientador'])->name('orientador.reunioes.index');
     Route::get('/aluno/reunioes', [ReuniaoController::class, 'indexOrientando'])->name('aluno.reunioes.index');
 
