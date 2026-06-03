@@ -96,7 +96,7 @@
 
     {{-- Reuniões --}}
     <div class="col-md-6 col-xl-4">
-        <a href="{{ route('dashboard.orientando') }}" class="text-decoration-none text-dark">
+        <a href="{{ route('reunioes.index') }}" class="text-decoration-none text-dark">
             <div class="card h-100">
                 <div class="card-header">
                     <i class="bi bi-calendar-event"></i> Reuniões

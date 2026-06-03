@@ -10,7 +10,7 @@
                 ['rota' => route('orientadores.edit', $orientador->id), 'icone' => 'bi bi-person-circle me-2', 'opcao' => 'Meu Perfil'],
                 ['rota' => route('orientador.meus_orientandos', $orientador->id), 'icone' => 'bi bi-people me-2', 'opcao' => 'Meus Orientandos'],
                 ['rota' => '#tccs', 'icone' => 'bi bi-book me-2', 'opcao' => 'Trabalhos Orientandos'],
-                ['rota' => '#reunioes', 'icone' => 'bi bi-calendar-event me-2', 'opcao' => 'Reuniões'],
+                ['rota' => route('reunioes.index'), 'icone' => 'bi bi-calendar-event me-2', 'opcao' => 'Reuniões'],
                 ['rota' => '#feedbacks', 'icone' => 'bi bi-chat-left me-2', 'opcao' => 'Feedbacks'],
                 ['rota' => route('solicitacoes_orientador.index', $orientador->id), 'icone' => 'bi bi-envelope me-2', 'opcao' => 'Solicitações', 'extra' => $totalPendentes > 0 ? '<span class="badge bg-danger rounded-pill">'.$totalPendentes.'</span>' : ''],
             ]
@@ -86,7 +86,7 @@
                         <div class="card-body">
                             <h6 class="text-muted text-uppercase fs-7 fw-bold">Reuniões Agendadas</h6>
                             <h2 class="fw-bold my-2 text-warning">2</h2>
-                            <a href="#reunioes" class="text-decoration-none small text-warning">
+                            <a href="{{ route('reunioes.index') }}" class="text-decoration-none small text-warning">
                                 Ver calendário <i class="bi bi-arrow-right ms-1"></i>
                             </a>
                         </div>

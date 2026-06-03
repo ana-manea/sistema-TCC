@@ -47,7 +47,7 @@
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('users.index') }}">
+                        <a class="nav-link" href="{{ route('reunioes.index') }}">
                             <i class="bi bi-calendar-event"></i> Reuniões
                         </a>
                     </li>

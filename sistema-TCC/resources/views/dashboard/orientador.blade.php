@@ -49,8 +49,8 @@
             <div class="card-header"><i class="bi bi-calendar-event"></i> Reuniões</div>
             <div class="card-body">
                 <ul class="list-unstyled mb-0">
-                    <li><a href="">Agendar reunião</a></li>
-                    <li><a href="">Registrar/ver reuniões</a></li>
+                    <li><a href="{{ route('reunioes.create') }}">Agendar reunião</a></li>
+                    <li><a href="{{ route('reunioes.index') }}">Registrar/ver reuniões</a></li>
                 </ul>
             </div>
         </div>
