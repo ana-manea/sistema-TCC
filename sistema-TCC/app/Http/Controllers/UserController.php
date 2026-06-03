@@ -6,12 +6,82 @@ use App\Models\User;
 use App\Models\Orientador;
 use App\Models\Orientando;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
-    public function index()
+    public function perfil()
     {
-        $users = User::latest()->get();
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        return view('users.perfil', compact('user'));
+    }
+
+    public function editarPerfil()
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        return view('users.editar-perfil', compact('user'));
+    }
+
+    public function atualizarPerfil(Request $request)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        $dados = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'password' => ['nullable', 'min:6'],
+            'avatar' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+
+            // Campos específicos do orientador no próprio perfil
+            'area_atuacao' => ['nullable', 'required_if:funcao,orientador', 'string', 'max:255'],
+            'disponibilidade' => ['nullable', 'required_if:funcao,orientador', 'string'],
+            'max_orientandos' => ['nullable', 'required_if:funcao,orientador', 'integer', 'min:1', 'max:8'],
+        ]);
+
+        if (!empty($dados['password'])) {
+            $dados['password'] = bcrypt($dados['password']);
+        } else {
+            unset($dados['password']);
+        }
+
+        $dados['avatar'] = $dados['avatar'] ?? $user->avatar ?? '#b20000';
+
+        // A função nunca é alterada pelo próprio usuário no perfil.
+        $user->update([
+            'name' => $dados['name'],
+            'email' => $dados['email'],
+            'password' => $dados['password'] ?? $user->password,
+            'avatar' => $dados['avatar'],
+        ]);
+
+        if ($user->funcao === 'orientador' && $user->orientador) {
+            $user->orientador->update([
+                'area_atuacao' => $dados['area_atuacao'] ?? $user->orientador->area_atuacao,
+                'disponibilidade' => $dados['disponibilidade'] ?? $user->orientador->disponibilidade,
+                'max_orientandos' => $dados['max_orientandos'] ?? $user->orientador->max_orientandos,
+            ]);
+        }
+
+        return redirect()
+            ->route('users.perfil')
+            ->with('sucesso', 'Perfil atualizado com sucesso!');
+    }
+
+    public function index(Request $request)
+    {
+        $query = User::latest();
+
+        if ($request->filled('funcao')) {
+            $query->where('funcao', $request->input('funcao'));
+        }
+
+        $users = $query->get();
+
         return view('users.index', compact('users'));
     }
 
@@ -19,7 +89,7 @@ class UserController extends Controller
     {
         $funcao = 'users';
 
-        if($request->filled('funcao')) {
+        if ($request->filled('funcao')) {
             $funcao = $request->input('funcao');
         }
 
@@ -30,47 +100,49 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $dados = $request->validate([
-            'name'     => ['required', 'string', 'max:255'],
-            'email'    => ['required', 'email','max:255', 'unique:users,email'],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email','max:255', 'unique:users,email'],
             'password' => ['required','min:6'],
-            'funcao'   => ['required','in:admin,orientador,orientando,membro_banca'],
-            'avatar'   => ['nullable','regex:/^#[0-9A-Fa-f]{6}$/'],
+            'funcao' => ['required','in:admin,orientador,orientando,membro_banca'],
+            'avatar' => ['nullable','regex:/^#[0-9A-Fa-f]{6}$/'],
+
             // Validações do Orientando
-            'orientando.matricula' => ['nullable','required_if:funcao,orientando','string','max:255','unique:orientandos,matricula'],
-            'orientando.curso' => ['nullable','required_if:funcao,orientando','string','max:255'],
-            'orientando.semestre' => ['nullable','integer','min:1'],
+            'matricula' => ['nullable','required_if:funcao,orientando','string','max:255','unique:orientandos,matricula'],
+            'curso' => ['nullable','required_if:funcao,orientando','string','max:255'],
+            'semestre' => ['nullable','integer','min:1'],
+
             // Validações do Orientador
-            'orientador.area_atuacao'    => ['nullable','required_if:funcao,orientador', 'string', 'max:255'],
-            'orientador.disponibilidade' => ['nullable','required_if:funcao,orientador', 'string'],
-            'orientador.max_orientandos' => ['nullable','required_if:funcao,orientador', 'integer', 'min:1', 'max:8'],
+            'area_atuacao' => ['nullable','required_if:funcao,orientador', 'string', 'max:255'],
+            'disponibilidade' => ['nullable','required_if:funcao,orientador', 'string'],
+            'max_orientandos' => ['nullable','required_if:funcao,orientador', 'integer', 'min:1', 'max:8'],
         ]);
-       
-        $dados['password'] = bcrypt($dados['password']);
 
-        $dados['avatar'] = $dados['avatar'] ?? '#b20000';
+        $user = User::create([
+            'name' => $dados['name'],
+            'email' => $dados['email'],
+            'password' => bcrypt($dados['password']),
+            'funcao' => $dados['funcao'],
+            'avatar' => $dados['avatar'] ?? '#b20000',
+        ]);
 
-        $user = User::create($dados);
-
-        // criar orientando
+        // Criar orientando
         if ($dados['funcao'] === 'orientando') {
-            $orient = $request->input('orientando', []);
             Orientando::create([
                 'user_id' => $user->id,
                 'orientador_id' => null,
-                'matricula' => $orient['matricula'] ?? null,
-                'curso' => $orient['curso'] ?? null,
-                'semestre' => $orient['semestre'] ?? null,
+                'matricula' => $dados['matricula'] ?? null,
+                'curso' => $dados['curso'] ?? null,
+                'semestre' => $dados['semestre'] ?? null,
             ]);
         }
 
-        // criar orientador
+        // Criar orientador
         if ($dados['funcao'] === 'orientador') {
-            $prof = $request->input('orientador', []);
             Orientador::create([
-                'user_id'         => $user->id,
-                'area_atuacao'    => $prof['area_atuacao'] ?? null,
-                'disponibilidade' => $prof['disponibilidade'] ?? null,
-                'max_orientandos' => $prof['max_orientandos'] ?? 8, // Usa o limite máximo padrão se vazio
+                'user_id' => $user->id,
+                'area_atuacao' => $dados['area_atuacao'] ?? null,
+                'disponibilidade' => $dados['disponibilidade'] ?? null,
+                'max_orientandos' => $dados['max_orientandos'] ?? 8,
             ]);
         }
 
@@ -86,83 +158,114 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
+        /** @var \App\Models\User $authUser */
+        $authUser = Auth::user();
+
+        // Regra: admin não pode editar a si próprio nem outro admin.
+        if (
+            $authUser->funcao === 'admin'
+            && (
+                $authUser->id === $user->id
+                || $user->funcao === 'admin'
+            )
+        ) {
+            return redirect()
+                ->route('users.index')
+                ->with('erro', 'Você não pode editar este usuário.');
+        }
+
         return view('users.edit', compact('user'));
     }
 
     public function update(Request $request, User $user)
     {
-        $dados = $request->validate([
-            'name'     => ['required', 'string', 'max:255'],
-            'email'    => ['required', 'email','max:255', 'unique:users,email,' . $user->id],
-            'password' => ['required','min:6'],
-            'funcao'   => ['required','in:admin,orientador,orientando,membro_banca'],
-            'avatar'   => ['nullable','regex:/^#[0-9A-Fa-f]{6}$/'],
+        /** @var \App\Models\User $authUser */
+        $authUser = Auth::user();
 
-            'orientando.matricula' => ['nullable','required_if:funcao,orientando','string','max:255'],
-            'orientando.curso' => ['nullable','required_if:funcao,orientando','string','max:255'],
-            'orientando.semestre' => ['nullable','integer','min:1'],
-
-            'orientador.area_atuacao'    => ['nullable','required_if:funcao,orientador', 'string', 'max:255'],
-            'orientador.disponibilidade' => ['nullable','required_if:funcao,orientador', 'string'],
-            'orientador.max_orientandos' => ['nullable','required_if:funcao,orientador', 'integer', 'min:1', 'max:8'],
-        ]);
-        
-        if (!empty($dados['password'])) {
-            $dados['password'] = bcrypt($dados['password']);
-        } else {
-            unset($dados['password']);
+        // Regra: admin não pode editar a si próprio nem outro admin.
+        if (
+            $authUser->funcao === 'admin'
+            && (
+                $authUser->id === $user->id
+                || $user->funcao === 'admin'
+            )
+        ) {
+            return redirect()
+                ->route('users.index')
+                ->with('erro', 'Você não pode editar este usuário.');
         }
 
-        $dados['avatar'] = $dados['avatar'] ?? '#b20000';
+        $dados = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email','max:255', 'unique:users,email,' . $user->id],
+            'password' => ['nullable','min:6'],
+            'funcao' => ['required','in:admin,orientador,orientando,membro_banca'],
+            'avatar' => ['nullable','regex:/^#[0-9A-Fa-f]{6}$/'],
 
-        $user->update($dados);
+            'matricula' => ['nullable','required_if:funcao,orientando','string','max:255'],
+            'curso' => ['nullable','required_if:funcao,orientando','string','max:255'],
+            'semestre' => ['nullable','integer','min:1'],
 
-        // sincronizar orientando
+            'area_atuacao' => ['nullable','required_if:funcao,orientador', 'string', 'max:255'],
+            'disponibilidade' => ['nullable','required_if:funcao,orientador', 'string'],
+            'max_orientandos' => ['nullable','required_if:funcao,orientador', 'integer', 'min:1', 'max:8'],
+        ]);
+
+        $dadosUsuario = [
+            'name' => $dados['name'],
+            'email' => $dados['email'],
+            'funcao' => $dados['funcao'],
+            'avatar' => $dados['avatar'] ?? '#b20000',
+        ];
+
+        if (!empty($dados['password'])) {
+            $dadosUsuario['password'] = bcrypt($dados['password']);
+        }
+
+        $user->update($dadosUsuario);
+
+        // Sincronizar orientando
         if ($dados['funcao'] === 'orientando') {
-            $orient = $request->input('orientando', []);
             if ($user->orientando) {
                 $user->orientando->update([
-                    'matricula' => $orient['matricula'] ?? $user->orientando->matricula,
-                    'curso' => $orient['curso'] ?? $user->orientando->curso,
-                    'semestre' => $orient['semestre'] ?? $user->orientando->semestre,
+                    'matricula' => $dados['matricula'] ?? $user->orientando->matricula,
+                    'curso' => $dados['curso'] ?? $user->orientando->curso,
+                    'semestre' => $dados['semestre'] ?? $user->orientando->semestre,
                 ]);
             } else {
                 Orientando::create([
                     'user_id' => $user->id,
                     'orientador_id' => null,
-                    'matricula' => $orient['matricula'] ?? null,
-                    'curso' => $orient['curso'] ?? null,
-                    'semestre' => $orient['semestre'] ?? null,
+                    'matricula' => $dados['matricula'] ?? null,
+                    'curso' => $dados['curso'] ?? null,
+                    'semestre' => $dados['semestre'] ?? null,
                 ]);
             }
         } else {
-            // se deixou de ser orientando, remove o registro
+            // Se deixou de ser orientando, remove o registro
             if ($user->orientando) {
                 $user->orientando->delete();
             }
         }
 
-        //sincronizar orientador
+        // Sincronizar orientador
         if ($dados['funcao'] === 'orientador') {
-            $prof = $request->input('orientador', []);
             if ($user->orientador) {
-                // Se já existir o perfil, atualiza
                 $user->orientador->update([
-                    'area_atuacao'    => $prof['area_atuacao'] ?? $user->orientador->area_atuacao,
-                    'disponibilidade' => $prof['disponibilidade'] ?? $user->orientador->disponibilidade,
-                    'max_orientandos' => $prof['max_orientandos'] ?? $user->orientador->max_orientandos,
+                    'area_atuacao' => $dados['area_atuacao'] ?? $user->orientador->area_atuacao,
+                    'disponibilidade' => $dados['disponibilidade'] ?? $user->orientador->disponibilidade,
+                    'max_orientandos' => $dados['max_orientandos'] ?? $user->orientador->max_orientandos,
                 ]);
             } else {
-                // Se mudou a função de outro tipo para Orientador, cria o registro do zero
                 Orientador::create([
-                    'user_id'         => $user->id,
-                    'area_atuacao'    => $prof['area_atuacao'] ?? null,
-                    'disponibilidade' => $prof['disponibilidade'] ?? null,
-                    'max_orientandos' => $prof['max_orientandos'] ?? 8,
+                    'user_id' => $user->id,
+                    'area_atuacao' => $dados['area_atuacao'] ?? null,
+                    'disponibilidade' => $dados['disponibilidade'] ?? null,
+                    'max_orientandos' => $dados['max_orientandos'] ?? 8,
                 ]);
             }
         } else {
-            // Se o usuário deixou de ser orientador, remove o registro antigo do banco
+            // Se deixou de ser orientador, remove o registro antigo do banco
             if ($user->orientador) {
                 $user->orientador->delete();
             }
@@ -175,6 +278,22 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
+        /** @var \App\Models\User $authUser */
+        $authUser = Auth::user();
+
+        // Regra: admin não pode excluir a si próprio nem outro admin.
+        if (
+            $authUser->funcao === 'admin'
+            && (
+                $authUser->id === $user->id
+                || $user->funcao === 'admin'
+            )
+        ) {
+            return redirect()
+                ->route('users.index')
+                ->with('erro', 'Você não pode excluir este usuário.');
+        }
+
         $user->delete();
 
         return redirect()

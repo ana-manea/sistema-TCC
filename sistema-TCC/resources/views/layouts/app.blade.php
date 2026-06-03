@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -8,94 +7,79 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
-        <div class="container">
-            <a class="navbar-brand" href="{{ route('dashboard') }}">
-                <i class="bi bi-mortarboard"></i>
-                Sistema de TCC
-            </a>
+    @auth
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top app-navbar">
+            <div class="container-fluid px-4">
+                <a class="navbar-brand fw-semibold" href="{{ route('dashboard') }}">
+                    <i class="bi bi-mortarboard"></i> Sistema TCC
+                </a>
 
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+                <div id="mainNav" class="collapse navbar-collapse">
+                    <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('dashboard') }}">
+                                <i class="bi bi-house"></i> Início
+                            </a>
+                        </li>
 
-            
-            <div id="mainNav" class="collapse navbar-collapse">
-                <ul class="navbar-nav ms-auto">
-                    
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('orientadores.index') }}">
-                            <i class="bi bi-person-badge"></i> Orientadores
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('orientandos.index') }}">
-                            <i class="bi bi-person"></i> Orientandos
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('tccs.index') }}">
-                            <i class="bi bi-journal-text"></i> TCCs
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('reunioes.index') }}">
-                            <i class="bi bi-calendar-event"></i> Reuniões
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('users.index') }}">
-                            <i class="bi bi-upload"></i> Entregas
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('bancas.index') }}">
-                            <i class="bi bi-award"></i> Bancas
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('users.index') }}">
-                            <i class="bi bi-people"></i> Usuários
-                        </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="btn btn-link nav-link">
-                                <i class="bi bi-box-arrow-right"></i> Sair
-                            </button>
-                        </form>
-                    </li>
-                </ul>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('users.perfil') }}">
+                                <i class="bi bi-person-circle"></i> Perfil
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="btn btn-link nav-link">
+                                    <i class="bi bi-box-arrow-right"></i> Sair
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
             </div>
-        </div>
-    </nav>
+        </nav>
+    @endauth
 
-    <main class="container-fluid">
+    <main class="container app-content">
         @if(session('sucesso'))
-            <div class="alert alert-success alert-dismissible fade show mt-2" role="alert">
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
                 <i class="bi bi-check-circle"></i> {{ session('sucesso') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        @if(session('erro'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle"></i> {{ session('erro') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        @if($errors->any())
+            <div class="alert alert-danger" role="alert">
+                <strong>Verifique os campos:</strong>
+                <ul class="mb-0">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
         @endif
 
         @yield('content')
     </main>
 
-    <footer class="border-top py-3">
+    <footer class="border-top py-3 mt-auto">
         <div class="container text-muted small text-center">
-            Fatec Prudente – Programação Web (Laravel)
+            Fatec Prudente – Programação Web Laravel
         </div>
     </footer>
 

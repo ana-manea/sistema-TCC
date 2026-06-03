@@ -25,8 +25,6 @@ class Tcc extends Model
 
     protected $casts = [
         'nota_final'  => 'decimal:2',
-        'created_at'  => 'datetime',
-        'updated_at'  => 'datetime',
     ];
 
     public function orientador()
@@ -68,5 +66,10 @@ class Tcc extends Model
     public function historicos()
     {
         return $this->hasMany(HistoricoTcc::class, 'tcc_id');
+    }
+
+    public function avaliacoes()
+    {
+        return $this->hasManyThrough(AvaliacaoBanca::class, Banca::class, 'tcc_id', 'banca_id', 'id', 'id');
     }
 }

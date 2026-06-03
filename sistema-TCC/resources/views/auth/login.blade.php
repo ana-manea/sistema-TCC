@@ -29,7 +29,7 @@
                         <i class="bi bi-check-circle"></i> Entrar
                     </button>
 
-                    <a href="" class="small">Esqueci minha senha</a>
+                    <a href="{{ route('password.request') }}" class="small">Esqueci minha senha</a>
                 </form>
             </div>
         </div>

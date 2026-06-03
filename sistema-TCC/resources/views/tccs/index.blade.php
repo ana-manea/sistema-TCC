@@ -15,9 +15,11 @@
             <a class="btn btn-outline-secondary" href="{{ route('tccs.em_andamento') }}">
                 <i class="bi bi-hourglass-split"></i> Em andamento
             </a>
-            <a class="btn btn-primary" href="{{ route('tccs.create') }}">
-                <i class="bi bi-plus-circle"></i> Novo Trabalho
-            </a>
+            @if(Auth::check() && Auth::user()->funcao === 'orientando')
+                <a class="btn btn-primary" href="{{ route('tccs.create') }}">
+                    <i class="bi bi-plus-circle"></i> Novo Trabalho
+                </a>
+            @endif
         </div>
     </div>
 
@@ -84,19 +86,20 @@
                                 <a class="btn btn-sm btn-outline-secondary" href="{{ route('tccs.historico', $tcc) }}">
                                     <i class="bi bi-clock-history"></i> Histórico
                                 </a>
+                                @if(Auth::check() && Auth::user()->funcao === 'orientando')
+                                    <a class="btn btn-sm btn-outline-primary" href="{{ route('tccs.edit', $tcc) }}">
+                                        <i class="bi bi-pencil-square"></i> Editar
+                                    </a>
 
-                                <a class="btn btn-sm btn-outline-primary" href="{{ route('tccs.edit', $tcc) }}">
-                                    <i class="bi bi-pencil-square"></i> Editar
-                                </a>
-
-                                <form class="d-inline" action="{{ route('tccs.destroy', $tcc) }}" method="POST"
-                                    onsubmit="return confirm('Deseja realmente excluir este TCC?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="btn btn-sm btn-outline-danger" type="submit">
-                                        <i class="bi bi-trash"></i> Excluir
-                                    </button>
-                                </form>
+                                    <form class="d-inline" action="{{ route('tccs.destroy', $tcc) }}" method="POST"
+                                        onsubmit="return confirm('Deseja realmente excluir este TCC?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button class="btn btn-sm btn-outline-danger" type="submit">
+                                            <i class="bi bi-trash"></i> Excluir
+                                        </button>
+                                    </form>
+                                @endif
                                 </td>
                             </tr>
                         @endforeach

@@ -10,6 +10,10 @@ class Entrega extends Model
 
     protected $fillable = ['tcc_id', 'titulo', 'descricao', 'prazo', 'status'];
 
+    protected $casts = [
+        'prazo' => 'date',
+    ];
+
     // Uma entrega pertence a um TCC
     public function tcc()
     {

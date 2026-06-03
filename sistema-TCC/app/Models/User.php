@@ -12,7 +12,7 @@ class User extends Authenticatable
 
     protected $hidden = [
         'password',
-        'remenber_token'
+        'remember_token',
     ];
 
     protected $casts = [
@@ -35,9 +35,14 @@ class User extends Authenticatable
         return $this->hasMany(ArquivoEntrega::class, 'enviado_por');
     }
 
-    public function bancasComoMembro()
+    public function bancaMembros()
     {
         return $this->hasMany(BancaMembro::class, 'user_id');
+    }
+
+    public function bancas()
+    {
+        return $this->bancaMembros();
     }
 
     public function avaliacoes()

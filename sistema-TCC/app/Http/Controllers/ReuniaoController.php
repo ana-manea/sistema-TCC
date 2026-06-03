@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 
 class ReuniaoController extends Controller
 {
-    // Lista todas as reuniões
+    // Lista todas as reuniões (admin)
     public function index()
     {
         $user = Auth::user();
@@ -32,7 +32,43 @@ class ReuniaoController extends Controller
         return view('reunioes.index', compact('reunioes', 'podeGerenciar'));
     }
 
-    // Abre o formulário de cadastro
+    // Lista reuniões do orientador logado
+    public function indexOrientador()
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $orientador = $user->orientador;
+
+        $reunioes = Reuniao::with('tcc')
+            ->whereHas('tcc', fn($q) => $q->where('orientador_id', $orientador->id))
+            ->latest('data_hora')
+            ->get();
+
+        return view('reunioes.index', [
+            'reunioes' => $reunioes,
+            'modo'     => 'orientador',
+        ]);
+    }
+
+    // Lista reuniões do orientando logado
+    public function indexOrientando()
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $orientando = $user->orientando;
+
+        $reunioes = Reuniao::with('tcc')
+            ->whereHas('tcc.orientandos', fn($q) => $q->where('orientandos.id', $orientando->id))
+            ->latest('data_hora')
+            ->get();
+
+        return view('reunioes.index', [
+            'reunioes' => $reunioes,
+            'modo'     => 'orientando',
+        ]);
+    }
+
+    // Abre o formulário de cadastro (agendar reunião)
     public function create()
     {
         $user = Auth::user();
@@ -47,6 +83,7 @@ class ReuniaoController extends Controller
                 $query->where('orientador_id', $user->orientador->id);
             })
             ->with(['orientador.user', 'orientandos.user'])
+            ->orderBy('tema')
             ->get();
 
         return view('reunioes.create', compact('tccs'));
@@ -88,14 +125,16 @@ class ReuniaoController extends Controller
             abort(403);
         }
 
-        $request->validate([
+        $dados = $request->validate([
             'tcc_id'   => 'required|integer|exists:tccs,id',
             'data_hora' => 'required|date',
             'local'    => 'nullable|string|max:255',
+            'observacoes'     => 'nullable|string',
+            'proximos_passos' => 'nullable|string',
             'status'   => 'required|in:agendada,realizada,cancelada',
         ]);
 
-        Reuniao::create($request->all());
+        Reuniao::create($dados);
 
         return redirect()->route('reunioes.index')
             ->with('sucesso', 'Reunião cadastrada com sucesso!');
@@ -118,6 +157,7 @@ class ReuniaoController extends Controller
             ->when($user->funcao === 'orientador' && $user->orientador, function ($query) use ($user) {
                 $query->where('orientador_id', $user->orientador->id);
             })
+            ->orderBy('tema')
             ->get();
 
         return view('reunioes.edit', compact('reuniao', 'tccs'));
@@ -136,16 +176,16 @@ class ReuniaoController extends Controller
             abort(403);
         }
 
-        $request->validate([
+        $dados = $request->validate([
             'tcc_id'          => 'required|integer|exists:tccs,id',
-            'data_hora'        => 'required|date',
+            'data_hora'       => 'required|date',
             'local'           => 'nullable|string|max:255',
             'observacoes'     => 'nullable|string',
             'proximos_passos' => 'nullable|string',
             'status'          => 'required|in:agendada,realizada,cancelada',
         ]);
 
-        $reuniao->update($request->all());
+        $reuniao->update($dados);
 
         return redirect()->route('reunioes.index')
             ->with('sucesso', 'Reunião atualizada com sucesso!');

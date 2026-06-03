@@ -1,100 +1,162 @@
 @csrf
 @php
-    $orientando = $orientando ?? ($user->orientando ?? null);
-    $orientador = $orientador ?? ($user->orientador ?? null);
+    $funcaoSelecionada = old('funcao', $user->funcao ?? '');
 @endphp
 
-<div class="student-block border rounded p-3 mb-3">
-    <h5>Dados Básicos</h5>
+<div class="mb-3">
+    <label class="form-label">Nome</label>
+    <input
+        type="text"
+        name="name"
+        class="form-control"
+        value="{{ old('name', $user->name ?? '') }}"
+    >
+    @error('name') <div class="form-error">{{ $message }}</div> @enderror
+</div>
+
+<div class="mb-3">
+    <label class="form-label">E-mail</label>
+    <input
+        type="email"
+        name="email"
+        class="form-control"
+        value="{{ old('email', $user->email ?? '') }}"
+    >
+    @error('email') <div class="form-error">{{ $message }}</div> @enderror
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Senha</label>
+    <input type="password" name="password" class="form-control">
+    @error('password') <div class="form-error">{{ $message }}</div> @enderror
+</div>
+
+<div class="mb-3">
+    <label class="form-label">Função</label>
+    <select name="funcao" id="funcao" class="form-select">
+        <option value="">Selecione</option>
+        <option value="admin" @selected($funcaoSelecionada == 'admin')>Admin</option>
+        <option value="orientador" @selected($funcaoSelecionada == 'orientador')>Orientador</option>
+        <option value="orientando" @selected($funcaoSelecionada == 'orientando')>Orientando</option>
+        <option value="membro_banca" @selected($funcaoSelecionada == 'membro_banca')>Membro da banca</option>
+    </select>
+    @error('funcao') <div class="form-error">{{ $message }}</div> @enderror
+</div>
+
+<div id="campos-orientador" style="display: none;">
+    <hr>
+
+    <h5 class="mb-3">Dados do Orientador</h5>
 
     <div class="mb-3">
-        <label class="form-label">Nome</label>
-        <input type="text" name="name" class="form-control" value="{{ old('name', $user->name ?? '') }}">
-        @error('name') <div class="form-error">{{ $message }}</div> @enderror
+        <label class="form-label">Área de atuação</label>
+        <input
+            type="text"
+            name="area_atuacao"
+            class="form-control"
+            value="{{ old('area_atuacao', $user->orientador->area_atuacao ?? '') }}"
+        >
+        @error('area_atuacao') <div class="form-error">{{ $message }}</div> @enderror
     </div>
 
     <div class="mb-3">
-        <label class="form-label">E-mail</label>
-        <input type="email" name="email" class="form-control" value="{{ old('email', $user->email ?? '') }}">
-        @error('email') <div class="form-error">{{ $message }}</div> @enderror
+        <label class="form-label">Disponibilidade</label>
+        <textarea
+            name="disponibilidade"
+            class="form-control"
+            rows="3"
+        >{{ old('disponibilidade', $user->orientador->disponibilidade ?? '') }}</textarea>
+        @error('disponibilidade') <div class="form-error">{{ $message }}</div> @enderror
     </div>
 
     <div class="mb-3">
-        <label class="form-label">Senha</label>
-        <input type="password" name="password" class="form-control">
-        @error('password') <div class="form-error">{{ $message }}</div> @enderror
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">Função</label>
-        <select name="funcao" class="form-select">
-            <option value="">Selecione</option>
-            <option value="admin" @selected(old('funcao', $funcao ?? $user->funcao ?? '') == 'admin')>Admin</option>
-            <option value="orientador" @selected(old('funcao', $funcao ?? $user->funcao ?? '') == 'orientador')>Orientador</option>
-            <option value="orientando" @selected(old('funcao', $funcao ?? $user->funcao ?? '') == 'orientando')>Orientando</option>
-            <option value="membro_banca" @selected(old('funcao', $funcao ?? $user->funcao ?? '') == 'membro_banca')>Membro da banca</option>
-        </select>
-        @error('funcao') <div class="form-error">{{ $message }}</div> @enderror
-    </div>
-
-    <div class="mb-3">
-        <label class="form-label">Cor do Avatar</label>
-
-        <div class="d-flex align-items-center gap-3">
-            <input type="color" name="avatar" class="form-control form-control-color" value="{{ old('avatar', $user->avatar ?? '#b20000') }}">
-            <span class="text-muted small">Padrão: #b20000</span>
-        </div>
-
-        @error('avatar') <div class="form-error">{{ $message }}</div> @enderror
+        <label class="form-label">Máximo de orientandos</label>
+        <input
+            type="number"
+            name="max_orientandos"
+            class="form-control"
+            min="1"
+            value="{{ old('max_orientandos', $user->orientador->max_orientandos ?? 5) }}"
+        >
+        @error('max_orientandos') <div class="form-error">{{ $message }}</div> @enderror
     </div>
 </div>
 
-<div id="orientando-fields" style="display: none;">
-    @include('orientando._form', ['orientando' => $orientando, 'fieldPrefix' => 'orientando', 'requireFields' => false])
+<div id="campos-orientando" style="display: none;">
+    <hr>
+
+    <h5 class="mb-3">Dados do Orientando</h5>
+
+    <div class="mb-3">
+        <label class="form-label">Matrícula</label>
+        <input
+            type="text"
+            name="matricula"
+            class="form-control"
+            value="{{ old('matricula', $user->orientando->matricula ?? '') }}"
+        >
+        @error('matricula') <div class="form-error">{{ $message }}</div> @enderror
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Curso</label>
+        <input
+            type="text"
+            name="curso"
+            class="form-control"
+            value="{{ old('curso', $user->orientando->curso ?? '') }}"
+        >
+        @error('curso') <div class="form-error">{{ $message }}</div> @enderror
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Semestre</label>
+        <input
+            type="text"
+            name="semestre"
+            class="form-control"
+            value="{{ old('semestre', $user->orientando->semestre ?? '') }}"
+        >
+        @error('semestre') <div class="form-error">{{ $message }}</div> @enderror
+    </div>
 </div>
 
-<div id="orientador-fields" style="display: none;">
-    @include('orientadores._form', ['orientador' => $orientador, 'fieldPrefix' => 'orientador', 'requireFields' => false])
+<div class="mb-3">
+    <label class="form-label">Cor do Avatar</label>
+    <input
+        type="color"
+        name="avatar"
+        class="form-control form-control-color"
+        value="{{ old('avatar', $user->avatar ?? '#b20000') }}"
+    >
+    @error('avatar') <div class="form-error">{{ $message }}</div> @enderror
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-            const funcaoSelect = document.querySelector('select[name="funcao"]');
-            const orientandoFields = document.getElementById('orientando-fields');
-            const orientadorFields = document.getElementById('orientador-fields');
+document.addEventListener('DOMContentLoaded', function () {
+    const selectFuncao = document.getElementById('funcao');
+    const camposOrientador = document.getElementById('campos-orientador');
+    const camposOrientando = document.getElementById('campos-orientando');
 
-            const orientandoInputs = orientandoFields
-                ? orientandoFields.querySelectorAll('[data-role="orientando"]')
-                : [];
-            const orientadorInputs = orientadorFields
-                ? orientadorFields.querySelectorAll('[data-role="orientador"]')
-                : [];
+    if (!selectFuncao || !camposOrientador || !camposOrientando) {
+        return;
+    }
 
-            function setGroupState(inputs, enabled) {
-                inputs.forEach((input) => {
-                    input.disabled = !enabled;
-                    input.required = enabled && input.dataset.required === 'true';
-                });
-            }
+    function atualizarCampos() {
+        camposOrientador.style.display = 'none';
+        camposOrientando.style.display = 'none';
 
-            function toggle() {
-                if (!funcaoSelect) return;
-                const v = funcaoSelect.value;
-                const exibirOrientando = v === 'orientando';
-                const exibirOrientador = v === 'orientador';
+        if (selectFuncao.value === 'orientador') {
+            camposOrientador.style.display = 'block';
+        }
 
-                if (orientandoFields) orientandoFields.style.display = exibirOrientando ? 'block' : 'none';
-                if (orientadorFields) orientadorFields.style.display = exibirOrientador ? 'block' : 'none';
+        if (selectFuncao.value === 'orientando') {
+            camposOrientando.style.display = 'block';
+        }
+    }
 
-                setGroupState(orientandoInputs, exibirOrientando);
-                setGroupState(orientadorInputs, exibirOrientador);
-            }
+    atualizarCampos();
 
-            if (funcaoSelect) {
-                funcaoSelect.addEventListener('change', toggle);
-            }
-
-            // initial state
-            toggle();
-    });
+    selectFuncao.addEventListener('change', atualizarCampos);
+});
 </script>

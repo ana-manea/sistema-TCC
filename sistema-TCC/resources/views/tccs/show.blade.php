@@ -80,7 +80,7 @@
 
                     <dt class="col-sm-4">Membros</dt>
                     <dd class="col-sm-8">
-                        @forelse($tcc->banca->bancaMembros as $membro)
+                        @forelse($tcc->banca->membros as $membro)
                             {{ $membro->user?->name }}
                             ({{ ucfirst(str_replace('_', ' ', $membro->papel)) }})@if(!$loop->last), @endif
                         @empty
@@ -130,6 +130,51 @@
                     <i class="bi bi-pencil-square"></i> Agendar Banca
                 </a>
             @endif
+            {{-- Feedbacks --}}
+            <div class="card-header bg-white border-bottom-0 pt-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 text-primary fw-bold">
+                    <i class="bi bi-chat-left-text me-2"></i>Feedbacks de Orientação
+                </h5>
+                
+                @if(Auth::check() && Auth::user()->orientador)
+                    <a href="{{ route('feedbacks.create', ['tcc_id' => $tcc->id]) }}" class="btn btn-primary btn-sm shadow-sm">
+                        <i class="bi bi-plus-lg"></i> Novo Feedback
+                    </a>
+                @endif
+            </div>
+            
+            <div class="card-body">
+                @forelse($tcc->feedbacks as $feedback)
+                    <div class="p-3 mb-3 border rounded bg-light">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <p class="mb-2 text-dark">{{ $feedback->descricao }}</p>
+                            
+                            @if(Auth::check() && Auth::user()->orientador && Auth::user()->orientador->id === $feedback->orientador_id)
+                                <div class="btn-group ms-2">
+                                    <a href="{{ route('feedbacks.edit', $feedback->id) }}" class="btn btn-sm btn-outline-warning">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form action="{{ route('feedbacks.destroy', $feedback->id) }}" method="POST" onsubmit="return confirm('Excluir este feedback?');">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            @endif
+                        </div>
+                        <small class="text-muted d-block">
+                            <i class="bi bi-person me-1"></i>{{ $feedback->orientador->user->name }} | 
+                            <i class="bi bi-clock me-1"></i>{{ $feedback->created_at->format('d/m/Y H:i') }}
+                        </small>
+                    </div>
+                @empty
+                    <div class="text-center py-4">
+                        <i class="bi bi-inbox text-muted" style="font-size: 2rem;"></i>
+                        <p class="text-muted mt-2">Nenhum feedback registrado para este TCC.</p>
+                    </div>
+                @endforelse
+            </div>
         </div>
     </div>
 </div>

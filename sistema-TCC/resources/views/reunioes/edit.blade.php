@@ -11,16 +11,15 @@
                 </div>
 
                 <div class="card-body">
-                    <form action="{{ route('reunioes.update', $reuniao) }}" method="POST">
+                    <form action="{{ route('reunioes.update', $reuniao) }}" method="POST" class="vstack gap-3">
                         @method('PUT')
-                        @include('reunioes._form')
+                        @include('reunioes._form', ['reuniao' => $reuniao])
 
-                        <div>
+                        <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-floppy"></i> Salvar
+                                <i class="bi bi-check-circle"></i> Salvar
                             </button>
                             <a class="btn btn-outline-secondary" href="{{ route('reunioes.index') }}">
-                                <i class="bi bi-x-circle"></i> Cancelar
                             </a>
                         </div>
                     </form>

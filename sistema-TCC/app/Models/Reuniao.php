@@ -17,6 +17,10 @@ class Reuniao extends Model
         'status',
     ];
 
+    protected $casts = [
+        'data_hora' => 'datetime',
+    ];
+
     // Uma reunião pertence a um TCC
     public function tcc()
     {

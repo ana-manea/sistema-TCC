@@ -26,6 +26,11 @@ class Orientador extends Model
     {
         return $this->hasMany(Orientando::class, 'orientador_id');
     }
+
+    public function tccs()
+    {
+        return $this->hasMany(Tcc::class, 'orientador_id');
+    }
 }
 
 
