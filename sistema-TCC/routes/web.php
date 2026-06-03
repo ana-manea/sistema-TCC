@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\PasswordResetController;
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserController;
@@ -17,15 +18,6 @@ use App\Http\Controllers\TccController;
 use App\Http\Controllers\SolicitacaoOrientadorController;
 use App\Models\Orientador;
 
-Route::get('/', function () {
-    return view('welcome');
-});
-
-Route::get('/tccs/em-andamento', [TccController::class, 'emAndamento'])->name('tccs.em_andamento');
-
-Route::get('/tccs/{tcc}/historico', [TccController::class, 'historico'])->name('tccs.historico');
-
-
 // Sem autenticação
 Route::redirect('/', '/login');
 
@@ -34,6 +26,18 @@ Route::get('/login', [LoginController::class, 'showLoginForm'])
 
 Route::post('/login', [LoginController::class, 'login'])
     ->name('login.attempt');
+
+Route::get('/esqueci-senha', [PasswordResetController::class, 'showForgotForm'])
+    ->name('password.request');
+
+Route::post('/esqueci-senha', [PasswordResetController::class, 'sendResetLink'])
+    ->name('password.email');
+
+Route::get('/redefinir-senha/{token}', [PasswordResetController::class, 'showResetForm'])
+    ->name('password.reset');
+
+Route::post('/redefinir-senha', [PasswordResetController::class, 'resetPassword'])
+    ->name('password.update');
 
 
 // Com autenticação
@@ -76,6 +80,13 @@ Route::get('/aluno/tarefas', [TarefaController::class, 'indexOrientando'])
 
 Route::resource('reunioes', ReuniaoController::class)
     ->parameters(['reunioes' => 'reuniao']);
+
+Route::get('/aluno/reunioes', [ReuniaoController::class, 'indexOrientando'])
+    ->name('aluno.reunioes.index');
+
+Route::get('/tccs/em-andamento', [TccController::class, 'emAndamento'])->name('tccs.em_andamento');
+
+Route::get('/tccs/{tcc}/historico', [TccController::class, 'historico'])->name('tccs.historico');
 
 
 Route::get('/bancas/{banca}/avaliar', [AvaliacaoBancaController::class, 'criar'])->name('avaliacoes.criar');
@@ -120,6 +131,10 @@ Route::controller(OrientadorController::class)->group(function () {
     // meus orientandos
     Route::get('/orientador/{orientador}/meus-orientandos', 'meusOrientandos')
         ->name('orientador.meus_orientandos');
+    
+    Route::get('/orientador/reunioes', [ReuniaoController::class, 'indexOrientador'])
+        ->name('orientador.reunioes.index');
+    ;
 });
 
 Route::resource('orientadores', OrientadorController::class)->parameters(['orientadores' => 'orientador']);;
