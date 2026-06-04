@@ -122,6 +122,7 @@ class DashboardController extends Controller
         return [
             ['opcao' => 'Usuários', 'rota' => route('users.index'), 'routeName' => 'users', 'icone' => 'bi bi-people'],
             ['opcao' => 'TCCs', 'rota' => route('tccs.index'), 'routeName' => 'tccs', 'icone' => 'bi bi-journal-text'],
+            ['opcao' => 'TCCs em andamento', 'rota' => route('tccs.em_andamento'), 'routeName' => 'tccs.em_andamento', 'icone' => 'bi bi-hourglass-split'],
             ['opcao' => 'Bancas', 'rota' => route('bancas.index'), 'routeName' => 'bancas', 'icone' => 'bi bi-award'],
             ['opcao' => 'Reuniões', 'rota' => route('reunioes.index'), 'routeName' => 'reunioes', 'icone' => 'bi bi-calendar-event'],
             //['opcao' => 'Entregas', 'rota' => route('entregas.index'), 'routeName' => 'entregas', 'icone' => 'bi bi-folder'],
@@ -136,6 +137,7 @@ class DashboardController extends Controller
         return [
             ['opcao' => 'Meus orientandos', 'rota' => $orientador ? route('orientador.meus_orientandos', $orientador) : route('dashboard.orientador'), 'routeName' => 'orientador.meus_orientandos', 'icone' => 'bi bi-people'],
             ['opcao' => 'TCCs orientados', 'rota' => route('tccs.index'), 'routeName' => 'tccs', 'icone' => 'bi bi-journal-text'],
+            ['opcao' => 'TCCs em andamento', 'rota' => route('tccs.em_andamento'), 'routeName' => 'tccs.em_andamento', 'icone' => 'bi bi-hourglass-split'],
             ['opcao' => 'Reuniões', 'rota' => route('orientador.reunioes.index'), 'routeName' => 'orientador.reunioes', 'icone' => 'bi bi-calendar-event'],
             ['opcao' => 'Tarefas', 'rota' => route('tarefas.index'), 'routeName' => 'tarefas', 'icone' => 'bi bi-check2-square'],
             ['opcao' => 'Solicitações', 'rota' => $orientador ? route('solicitacoes_orientador.index', $orientador) : route('dashboard.orientador'), 'routeName' => 'solicitacoes_orientador', 'icone' => 'bi bi-envelope'],
@@ -146,6 +148,7 @@ class DashboardController extends Controller
     {
         return [
             ['opcao' => 'Meu TCC', 'rota' => route('tccs.index'), 'routeName' => 'tccs', 'icone' => 'bi bi-journal-text'],
+            ['opcao' => 'TCCs em andamento', 'rota' => route('tccs.em_andamento'), 'routeName' => 'tccs.em_andamento', 'icone' => 'bi bi-hourglass-split'],
             ['opcao' => 'Tarefas', 'rota' => route('aluno.tarefas.index'), 'routeName' => 'aluno.tarefas', 'icone' => 'bi bi-check2-square'],
             ['opcao' => 'Reuniões', 'rota' => route('aluno.reunioes.index'), 'routeName' => 'aluno.reunioes', 'icone' => 'bi bi-calendar-event'],
             //['opcao' => 'Entregas', 'rota' => route('aluno.entregas.index'), 'routeName' => 'aluno.entregas', 'icone' => 'bi bi-folder'],
