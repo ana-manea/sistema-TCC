@@ -144,7 +144,12 @@ class TccController extends Controller
      */
     public function emAndamento()
     {
+        if (Auth::check() && Auth::user()->funcao === 'membro_banca') {
+            abort(403, 'Membros da banca nao acessam a lista de TCCs em andamento.');
+        }
+
         $tccs = Tcc::with(['orientador.user', 'orientandos.user'])
+            ->withCount(['tarefas', 'entregas', 'reunioes'])
             ->where('status', 'em_andamento')
             ->orderBy('created_at', 'desc')
             ->get();

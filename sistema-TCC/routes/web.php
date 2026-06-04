@@ -72,6 +72,9 @@ Route::middleware('auth')->group(function () {
         ->name('users.perfil.update');
 });
 
+Route::get('/tccs/em-andamento', [TccController::class, 'emAndamento'])
+    ->name('tccs.em_andamento');
+
 Route::resource('tccs', TccController::class);
 
 Route::resource('tarefas', TarefaController::class)->except(['show']);
@@ -83,8 +86,6 @@ Route::resource('reunioes', ReuniaoController::class)
 
 Route::get('/aluno/reunioes', [ReuniaoController::class, 'indexOrientando'])
     ->name('aluno.reunioes.index');
-
-Route::get('/tccs/em-andamento', [TccController::class, 'emAndamento'])->name('tccs.em_andamento');
 
 Route::get('/tccs/{tcc}/historico', [TccController::class, 'historico'])->name('tccs.historico');
 
