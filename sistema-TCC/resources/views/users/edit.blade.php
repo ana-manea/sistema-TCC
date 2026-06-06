@@ -3,15 +3,13 @@
 @section('title', 'Editar Usuário')
 
 @section('content')
-<div class="d-flex flex-column mb-4">
-    <div class="d-flex justify-content-between align-items-start">
-        @include('layouts.voltar_titulo', [
-            'rota' => 'users.show', 
-            'variavel' => $user,
-            'pagAnterior' => 'ao Perfil do Usuário',
-            'pagAtual' => 'Editar Usuário: ' . $user->name
-        ])
-    </div>
+<div class="d-flex justify-content-between align-items-start mb-3">
+    @include('layouts.voltar_titulo', [
+        'rota' => 'users.show', 
+        'variavel' => $user,
+        'pagAnterior' => 'ao Perfil do Usuário',
+        'pagAtual' => 'Editar Usuário: ' . $user->name
+    ])
 </div>
 <div class="card">
     <div class="card-body">

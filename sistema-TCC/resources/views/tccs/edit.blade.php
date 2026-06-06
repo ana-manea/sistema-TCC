@@ -3,10 +3,11 @@
 @section('title', 'Editar TCC')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-start mb-4">
+<div class="d-flex justify-content-between align-items-start mb-3">
     @include('layouts.voltar_titulo', [
-        'rota' => 'tccs.index',
-        'pagAnterior' => 'aos Trabalhos',
+        'rota' => 'tccs.show',
+        'variavel' => $tcc,
+        'pagAnterior' => 'ao Trabalho',
         'pagAtual' => 'Editar Trabalho de Conclusão de Curso'
     ])
 </div>
@@ -24,7 +25,7 @@
                 @method('PUT')
                 @include('tccs._form')
 
-                <div class="d-flex gap-2 border-top pt-3 mt-3">
+                <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-primary px-4">Salvar</button>
                     <a class="btn btn-outline-secondary px-4" href="{{ route('tccs.show', $tcc) }}">
                         Cancelar

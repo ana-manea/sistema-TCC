@@ -13,18 +13,20 @@
     ];
 @endphp
 
-<div class="d-flex justify-content-between align-items-start mb-4">
+<div class="d-flex justify-content-between align-items-start mb-3">
     @include('layouts.voltar_titulo', [
         'rota' => 'dashboard',
         'pagAnterior' => 'ao Dashboard',
         'pagAtual' => 'Tarefas'
     ])
 
-    @if($modoAtual === 'orientador')
-        <a class="btn btn-primary" href="{{ route('tarefas.create') }}">
-            <i class="bi bi-plus-circle"></i> Nova tarefa
-        </a>
-    @endif
+    <div>
+        @if($modoAtual === 'orientador')
+            <a class="btn btn-primary" href="{{ route('tarefas.create') }}">
+                <i class="bi bi-plus-circle"></i> Nova tarefa
+            </a>
+        @endif
+    </div>
 </div>
 
 <div class="card shadow-sm">

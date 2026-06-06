@@ -3,14 +3,12 @@
 @section('title', 'Solicitar Orientador')
 
 @section('content')
-<div class="d-flex flex-column mb-4">
-    <div class="d-flex justify-content-between align-items-start">
-        @include('layouts.voltar_titulo', [
-            'rota' => 'solicitacoes_orientando.index',
-            'pagAnterior' => 'às Minhas Solicitações',
-            'pagAtual' => 'Nova Solicitação de Orientação'
-        ])
-    </div>
+<div class="d-flex justify-content-between align-items-start mb-3">
+    @include('layouts.voltar_titulo', [
+        'rota' => 'solicitacoes_orientando.index',
+        'pagAnterior' => 'às Minhas Solicitações',
+        'pagAtual' => 'Nova Solicitação de Orientação'
+    ])
 </div>
 
 <div class="card">

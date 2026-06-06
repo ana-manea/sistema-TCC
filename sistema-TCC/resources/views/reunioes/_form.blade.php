@@ -7,7 +7,7 @@
 @endphp
 
 <div class="mb-3">
-    <label class="form-label">TCC</label>
+    <label class="form-label">Trabalho</label>
     <select name="tcc_id" class="form-select @error('tcc_id') is-invalid @enderror" required>
         <option value="">— Selecione —</option>
         @foreach($tccs as $tcc)
@@ -47,7 +47,6 @@
            value="{{ old('local', $reuniao->local ?? '') }}"
            maxlength="255">
     @error('local') <div class="invalid-feedback">{{ $message }}</div> @enderror
-</div>
 </div>
 
 <div class="mb-3">

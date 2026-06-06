@@ -3,14 +3,12 @@
 @section('title', 'Editar Perfil')
 
 @section('content')
-<div class="d-flex flex-column mb-4">
-    <div class="d-flex justify-content-between align-items-start">
-        @include('layouts.voltar_titulo', [
-            'rota' => 'users.perfil',
-            'pagAnterior' => 'ao Perfil',
-            'pagAtual' => 'Editar Perfil'
-        ])
-    </div>
+<div class="d-flex justify-content-between align-items-start mb-3">
+    @include('layouts.voltar_titulo', [
+        'rota' => 'users.perfil',
+        'pagAnterior' => 'ao Perfil',
+        'pagAtual' => 'Editar Perfil'
+    ])
 </div>
 
 <div class="card shadow-sm">

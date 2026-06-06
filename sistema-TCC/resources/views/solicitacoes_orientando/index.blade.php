@@ -3,17 +3,19 @@
 @section('title', 'Minhas Solicitações')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-start mb-4">
+<div class="d-flex justify-content-between align-items-start mb-3">
     @include('layouts.voltar_titulo', [
         'rota' => 'dashboard',
         'pagAnterior' => 'ao Dashboard',
         'pagAtual' => 'Acompanhar Orientação'
     ])
     
-    {{-- Botão para criar nova solicitação --}}
-    <a href="{{ route('solicitacoes_orientando.create') }}" class="btn btn-primary">
-        <i class="bi bi-plus-lg"></i> Nova Solicitação
-    </a>
+    <div>
+        {{-- Botão para criar nova solicitação --}}
+        <a href="{{ route('solicitacoes_orientando.create') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Nova Solicitação
+        </a>
+    </div>
 </div>
 
 @if($solicitacoes->isEmpty())

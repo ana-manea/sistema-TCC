@@ -10,29 +10,28 @@
     $podeGerenciar = $podeGerenciar ?? (auth()->user() && auth()->user()->funcao !== 'orientando');
 @endphp
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div class="d-flex align-items-center gap-3">
-        <a href="{{ route('reunioes.index') }}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left"></i> Voltar
-        </a>
-        <h1 class="h3 mb-0">Detalhes da Reunião</h1>
-    </div>
+<div class="d-flex justify-content-between align-items-start mb-3">
+    @include('layouts.voltar_titulo', [
+        'rota' => 'reunioes.index',
+        'pagAnterior' => 'às Reuniões',
+        'pagAtual' => 'Detalhes da Reunião'
+    ])
 
+    <div>
     @if($podeGerenciar)
-        <div class="d-flex gap-2">
-            <a href="{{ route('reunioes.edit', $reuniao) }}" class="btn btn-outline-primary btn-sm">
+            <a href="{{ route('reunioes.edit', $reuniao) }}" class="btn btn-outline-primary">
                 <i class="bi bi-pencil-square"></i> Editar
             </a>
-            <form action="{{ route('reunioes.destroy', $reuniao) }}" method="POST"
+            <form action="{{ route('reunioes.destroy', $reuniao) }}" method="POST" class="d-inline"
                   onsubmit="return confirm('Excluir esta reunião?');">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="btn btn-outline-danger btn-sm">
+                <button type="submit" class="btn btn-outline-danger">
                     <i class="bi bi-trash"></i> Excluir
                 </button>
             </form>
-        </div>
-    @endif
+        @endif
+    </div>
 </div>
 
 <div class="card shadow-sm">

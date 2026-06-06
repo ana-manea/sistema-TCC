@@ -18,17 +18,15 @@
     $orientando = $user->orientando;
 @endphp
 
-<div class="d-flex flex-column mb-4">
-    <div class="d-flex justify-content-between align-items-start">
-        @include('layouts.voltar_titulo', [
-            'rota' => 'dashboard',
-            'pagAnterior' => 'ao Dashboard',
-            'pagAtual' => 'Meu Perfil'
-        ])
-        <a href="{{ route('users.perfil.edit') }}" class="btn btn-primary">
-            <i class="bi bi-pencil-square"></i> Editar Perfil
-        </a>
-    </div>
+<div class="d-flex justify-content-between align-items-start mb-3">
+    @include('layouts.voltar_titulo', [
+        'rota' => 'dashboard',
+        'pagAnterior' => 'ao Dashboard',
+        'pagAtual' => 'Meu Perfil'
+    ])
+    <a href="{{ route('users.perfil.edit') }}" class="btn btn-primary">
+        <i class="bi bi-pencil-square"></i> Editar Perfil
+    </a>
 </div>
 
 <div class="card shadow-sm">

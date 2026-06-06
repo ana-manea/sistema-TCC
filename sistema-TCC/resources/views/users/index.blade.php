@@ -3,7 +3,7 @@
 @section('title', 'Usuários')
 
 @section('content')
-<div class="d-flex flex-column mb-4">
+<div class="d-flex flex-column mb-3">
     <div class="d-flex justify-content-between align-items-start">
         @include('layouts.voltar_titulo', [
             'rota' => 'dashboard',
@@ -11,9 +11,11 @@
             'pagAtual' => request('funcao') ? 'Usuários - ' . ucfirst(str_replace('_', ' ', request('funcao'))) : 'Todos os Usuários'
         ])
         
-        <a class="btn btn-primary" href="{{ route('users.create') }}">
-            <i class="bi bi-plus-circle"></i> Novo Usuário
-        </a>
+        <div>
+            <a class="btn btn-primary" href="{{ route('users.create') }}">
+                <i class="bi bi-plus-circle"></i> Novo Usuário
+            </a>
+        </div>
     </div>
     <div class="w-50 align-self-center btn-group btn-group-sm mt-2">
         <a href="{{ route('users.index') }}"

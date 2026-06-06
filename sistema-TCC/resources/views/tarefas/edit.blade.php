@@ -3,7 +3,7 @@
 @section('title', 'Editar Tarefa')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-start mb-4">
+<div class="d-flex justify-content-between align-items-start mb-3">
     @include('layouts.voltar_titulo', [
         'rota' => 'tarefas.index',
         'pagAnterior' => 'às Tarefas',
