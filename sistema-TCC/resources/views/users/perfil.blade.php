@@ -18,286 +18,273 @@
     $orientando = $user->orientando;
 @endphp
 
-<div class="row justify-content-center">
+<div class="d-flex flex-column mb-4">
+    <div class="d-flex justify-content-between align-items-start">
+        @include('layouts.voltar_titulo', [
+            'rota' => 'dashboard',
+            'pagAnterior' => 'ao Dashboard',
+            'pagAtual' => 'Meu Perfil'
+        ])
+        <a href="{{ route('users.perfil.edit') }}" class="btn btn-primary">
+            <i class="bi bi-pencil-square"></i> Editar Perfil
+        </a>
+    </div>
+</div>
 
-    <div class="col-lg-10">
+<div class="card shadow-sm">
+    <div class="card-body">
 
-        <div class="card shadow-sm">
+        <div class="text-center mb-4">
 
-            <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="avatar-user mx-auto"
+                    @style(['background-color: ' . $corAvatar])>
 
-                <span>
-                    <i class="bi bi-person-circle"></i>
-                    Meu Perfil
-                </span>
-
-                <a href="{{ route('users.perfil.edit') }}"
-                   class="btn btn-sm btn-primary">
-
-                    <i class="bi bi-pencil-square"></i>
-                    Editar Perfil
-
-                </a>
+                {{ $iniciais }}
 
             </div>
 
-            <div class="card-body">
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table table-bordered align-middle">
+
+                <tbody>
+
+                    <tr>
+                        <th width="30%">Nome</th>
+                        <td>{{ $user->name }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>E-mail</th>
+                        <td>{{ $user->email }}</td>
+                    </tr>
+
+                    <tr>
+                        <th>Função</th>
+                        <td>
+                            <span class="badge bg-dark">
+                                {{ ucfirst(str_replace('_', ' ', $user->funcao)) }}
+                            </span>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th>Cor do Avatar</th>
+                        <td>
+
+                            <span class="d-inline-flex align-items-center gap-2">
 
-                <div class="text-center mb-4">
+                                <span
+                                    @style([
+                                        'width:20px',
+                                        'height:20px',
+                                        'border-radius:50%',
+                                        'background-color:' . $corAvatar,
+                                        'border:1px solid #ccc'
+                                    ])>
+                                </span>
 
-                    <div class="avatar-user mx-auto"
-                         @style(['background-color: ' . $corAvatar])>
+                                {{ $corAvatar }}
 
-                        {{ $iniciais }}
+                            </span>
 
-                    </div>
+                        </td>
+                    </tr>
 
-                </div>
+                    {{-- ===================================================== --}}
+                    {{-- ADMIN --}}
+                    {{-- ===================================================== --}}
 
-                <div class="table-responsive">
+                    @if($user->funcao === 'admin')
 
-                    <table class="table table-bordered align-middle">
+                        <tr>
+                            <th>Tipo de acesso</th>
+                            <td>
+                                Controle total do sistema.
+                            </td>
+                        </tr>
 
-                        <tbody>
-
-                            <tr>
-                                <th width="30%">Nome</th>
-                                <td>{{ $user->name }}</td>
-                            </tr>
-
-                            <tr>
-                                <th>E-mail</th>
-                                <td>{{ $user->email }}</td>
-                            </tr>
+                    @endif
 
-                            <tr>
-                                <th>Função</th>
-                                <td>
-                                    <span class="badge bg-dark">
-                                        {{ ucfirst(str_replace('_', ' ', $user->funcao)) }}
-                                    </span>
-                                </td>
-                            </tr>
+                    {{-- ===================================================== --}}
+                    {{-- ORIENTADOR --}}
+                    {{-- ===================================================== --}}
 
-                            <tr>
-                                <th>Cor do Avatar</th>
-                                <td>
+                    @if($user->funcao === 'orientador' && $orientador)
 
-                                    <span class="d-inline-flex align-items-center gap-2">
+                        <tr>
+                            <th>Área de atuação</th>
+                            <td>
+                                {{ $orientador->area_atuacao }}
+                            </td>
+                        </tr>
 
-                                        <span
-                                            @style([
-                                                'width:20px',
-                                                'height:20px',
-                                                'border-radius:50%',
-                                                'background-color:' . $corAvatar,
-                                                'border:1px solid #ccc'
-                                            ])>
-                                        </span>
+                        <tr>
+                            <th>Disponibilidade</th>
+                            <td>
+                                {{ $orientador->disponibilidade ?: '-' }}
+                            </td>
+                        </tr>
 
-                                        {{ $corAvatar }}
+                        <tr>
+                            <th>Máximo de orientandos</th>
+                            <td>
+                                {{ $orientador->max_orientandos }}
+                            </td>
+                        </tr>
 
-                                    </span>
+                        <tr>
+                            <th>Orientandos atuais</th>
+                            <td>
+                                {{ $orientador->orientandos()->count() }}
+                            </td>
+                        </tr>
 
-                                </td>
-                            </tr>
+                        <tr>
+                            <th>Vagas disponíveis</th>
+                            <td>
 
-                            {{-- ===================================================== --}}
-                            {{-- ADMIN --}}
-                            {{-- ===================================================== --}}
+                                {{
+                                    max(
+                                        $orientador->max_orientandos
+                                        - $orientador->orientandos()->count(),
+                                        0
+                                    )
+                                }}
 
-                            @if($user->funcao === 'admin')
+                            </td>
+                        </tr>
 
-                                <tr>
-                                    <th>Tipo de acesso</th>
-                                    <td>
-                                        Controle total do sistema.
-                                    </td>
-                                </tr>
+                        <tr>
+                            <th>Orientandos vinculados</th>
 
-                            @endif
+                            <td>
 
-                            {{-- ===================================================== --}}
-                            {{-- ORIENTADOR --}}
-                            {{-- ===================================================== --}}
+                                @forelse($orientador->orientandos as $aluno)
 
-                            @if($user->funcao === 'orientador' && $orientador)
+                                    <div class="mb-2">
 
-                                <tr>
-                                    <th>Área de atuação</th>
-                                    <td>
-                                        {{ $orientador->area_atuacao }}
-                                    </td>
-                                </tr>
+                                        <strong>
+                                            {{ $aluno->user->name ?? '-' }}
+                                        </strong>
 
-                                <tr>
-                                    <th>Disponibilidade</th>
-                                    <td>
-                                        {{ $orientador->disponibilidade ?: '-' }}
-                                    </td>
-                                </tr>
+                                        <br>
 
-                                <tr>
-                                    <th>Máximo de orientandos</th>
-                                    <td>
-                                        {{ $orientador->max_orientandos }}
-                                    </td>
-                                </tr>
+                                        <small class="text-muted">
 
-                                <tr>
-                                    <th>Orientandos atuais</th>
-                                    <td>
-                                        {{ $orientador->orientandos()->count() }}
-                                    </td>
-                                </tr>
+                                            Matrícula:
+                                            {{ $aluno->matricula }}
 
-                                <tr>
-                                    <th>Vagas disponíveis</th>
-                                    <td>
+                                        </small>
 
-                                        {{
-                                            max(
-                                                $orientador->max_orientandos
-                                                - $orientador->orientandos()->count(),
-                                                0
-                                            )
-                                        }}
+                                    </div>
 
-                                    </td>
-                                </tr>
+                                @empty
 
-                                <tr>
-                                    <th>Orientandos vinculados</th>
+                                    Nenhum orientando vinculado.
 
-                                    <td>
+                                @endforelse
 
-                                        @forelse($orientador->orientandos as $aluno)
+                            </td>
+                        </tr>
 
-                                            <div class="mb-2">
+                    @endif
 
-                                                <strong>
-                                                    {{ $aluno->user->name ?? '-' }}
-                                                </strong>
+                    {{-- ===================================================== --}}
+                    {{-- ORIENTANDO --}}
+                    {{-- ===================================================== --}}
 
-                                                <br>
+                    @if($user->funcao === 'orientando' && $orientando)
 
-                                                <small class="text-muted">
+                        <tr>
+                            <th>Matrícula</th>
+                            <td>
+                                {{ $orientando->matricula }}
+                            </td>
+                        </tr>
 
-                                                    Matrícula:
-                                                    {{ $aluno->matricula }}
+                        <tr>
+                            <th>Curso</th>
+                            <td>
+                                {{ $orientando->curso }}
+                            </td>
+                        </tr>
 
-                                                </small>
+                        <tr>
+                            <th>Semestre</th>
+                            <td>
+                                {{ $orientando->semestre ?: '-' }}
+                            </td>
+                        </tr>
 
-                                            </div>
+                        <tr>
+                            <th>Orientador</th>
+                            <td>
 
-                                        @empty
+                                {{ $orientando->orientador?->user?->name ?? 'Sem orientador vinculado' }}
 
-                                            Nenhum orientando vinculado.
+                            </td>
+                        </tr>
 
-                                        @endforelse
+                    @endif
 
-                                    </td>
-                                </tr>
+                    {{-- ===================================================== --}}
+                    {{-- MEMBRO DA BANCA --}}
+                    {{-- ===================================================== --}}
 
-                            @endif
+                    @if($user->funcao === 'membro_banca')
 
-                            {{-- ===================================================== --}}
-                            {{-- ORIENTANDO --}}
-                            {{-- ===================================================== --}}
+                        <tr>
+                            <th>Participação em bancas</th>
 
-                            @if($user->funcao === 'orientando' && $orientando)
+                            <td>
 
-                                <tr>
-                                    <th>Matrícula</th>
-                                    <td>
-                                        {{ $orientando->matricula }}
-                                    </td>
-                                </tr>
+                                @php
+                                    $bancas = $user->bancaMembros ?? [];
+                                @endphp
 
-                                <tr>
-                                    <th>Curso</th>
-                                    <td>
-                                        {{ $orientando->curso }}
-                                    </td>
-                                </tr>
+                                @forelse($bancas as $membro)
 
-                                <tr>
-                                    <th>Semestre</th>
-                                    <td>
-                                        {{ $orientando->semestre ?: '-' }}
-                                    </td>
-                                </tr>
+                                    <div class="mb-2">
 
-                                <tr>
-                                    <th>Orientador</th>
-                                    <td>
+                                        <strong>
+                                            {{ $membro->papel }}
+                                        </strong>
 
-                                        {{ $orientando->orientador?->user?->name ?? 'Sem orientador vinculado' }}
+                                        <br>
 
-                                    </td>
-                                </tr>
+                                        <small class="text-muted">
 
-                            @endif
+                                            Banca #{{ $membro->banca_id }}
 
-                            {{-- ===================================================== --}}
-                            {{-- MEMBRO DA BANCA --}}
-                            {{-- ===================================================== --}}
+                                        </small>
 
-                            @if($user->funcao === 'membro_banca')
+                                    </div>
 
-                                <tr>
-                                    <th>Participação em bancas</th>
+                                @empty
 
-                                    <td>
+                                    Nenhuma banca vinculada.
 
-                                        @php
-                                            $bancas = $user->bancaMembros ?? [];
-                                        @endphp
+                                @endforelse
 
-                                        @forelse($bancas as $membro)
+                            </td>
+                        </tr>
 
-                                            <div class="mb-2">
+                    @endif
 
-                                                <strong>
-                                                    {{ $membro->papel }}
-                                                </strong>
+                    <tr>
+                        <th>Cadastrado em</th>
 
-                                                <br>
+                        <td>
+                            {{ $user->created_at?->format('d/m/Y H:i') }}
+                        </td>
+                    </tr>
 
-                                                <small class="text-muted">
+                </tbody>
 
-                                                    Banca #{{ $membro->banca_id }}
-
-                                                </small>
-
-                                            </div>
-
-                                        @empty
-
-                                            Nenhuma banca vinculada.
-
-                                        @endforelse
-
-                                    </td>
-                                </tr>
-
-                            @endif
-
-                            <tr>
-                                <th>Cadastrado em</th>
-
-                                <td>
-                                    {{ $user->created_at?->format('d/m/Y H:i') }}
-                                </td>
-                            </tr>
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
+            </table>
 
         </div>
 
