@@ -216,22 +216,8 @@
             </div>
 
             <div class="d-flex gap-2">
-
-                <button type="submit"
-                        class="btn btn-primary">
-
-                    <i class="bi bi-check-circle"></i>
-                    Salvar alterações
-
-                </button>
-
-                <a href="{{ route('users.perfil') }}"
-                    class="btn btn-outline-secondary">
-
-                    Voltar
-
-                </a>
-
+                <button type="submit" class="btn btn-primary">Salvar</button>
+                <a href="{{ route('users.perfil') }}" class="btn btn-outline-secondary">Cancelar</a>
             </div>
 
         </form>

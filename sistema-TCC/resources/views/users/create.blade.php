@@ -18,7 +18,7 @@
 
                 @include('users._form')
                 <div class="d-flex gap-2">
-                    <button class="btn btn-primary">Salvar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
                     <a href="{{ route('users.index') }}" class="btn btn-outline-secondary">Cancelar</a>
                 </div>
             </form>

@@ -16,7 +16,7 @@
             @include('tccs._form')
 
             <div class="d-flex gap-2">
-                <button class="btn btn-primary">Salvar</button>
+                <button type="submit" class="btn btn-primary">Salvar</button>
                 <a class="btn btn-outline-secondary" href="{{ route('tccs.index') }}">Cancelar</a>
             </div>
         </form>
