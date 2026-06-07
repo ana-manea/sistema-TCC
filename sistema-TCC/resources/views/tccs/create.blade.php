@@ -3,28 +3,23 @@
 @section('title', 'Novo TCC')
 
 @section('content')
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="card">
-                <div class="card-header">
-                    <i class="bi bi-journal-plus"></i> Novo Trabalho de Conclusão de Curso
-                </div>
+<div class="d-flex justify-content-between align-items-start mb-3">
+    @include('layouts.voltar_titulo', [
+        'rota' => 'tccs.index',
+        'pagAnterior' => 'aos Trabalhos',
+        'pagAtual' => 'Novo Trabalho de Conclusão de Curso'
+    ])
+</div>
+<div class="card">
+    <div class="card-body">
+        <form action="{{ route('tccs.store') }}" method="POST">
+            @include('tccs._form')
 
-                <div class="card-body">
-                    <form action="{{ route('tccs.store') }}" method="POST">
-                        @include('tccs._form')
-
-                        <div>
-                            <button type="submit">
-                                <i class="bi bi-floppy"></i> Salvar
-                            </button>
-                            <a href="{{ route('tccs.index') }}">
-                                <i class="bi bi-x-circle"></i> Cancelar
-                            </a>
-                        </div>
-                    </form>
-                </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Salvar</button>
+                <a class="btn btn-outline-secondary" href="{{ route('tccs.index') }}">Cancelar</a>
             </div>
-        </div>
+        </form>
     </div>
+</div>
 @endsection

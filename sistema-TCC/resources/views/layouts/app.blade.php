@@ -48,7 +48,7 @@
         </nav>
     @endauth
 
-    <main class="container app-content">
+    <main class="container app-content mb-4">
         @if(session('sucesso'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 <i class="bi bi-check-circle"></i> {{ session('sucesso') }}

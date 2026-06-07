@@ -3,24 +3,29 @@
 @section('title', 'Detalhes da Banca')
 
 @section('content')
-    <div class="d-flex align-items-center justify-content-between mb-3">
-        <div>
-            <h1 class="h3 mb-0">Detalhes da Banca</h1>
-            <small class="text-muted">{{ $banca->tcc->tema ?? 'TCC #' . $banca->tcc_id }}</small>
-        </div>
+<div class="d-flex justify-content-between align-items-start mb-3">
+    @include('layouts.voltar_titulo', [
+        'rota' => 'bancas.index',
+        'pagAnterior' => 'às Bancas',
+        'pagAtual' => 'Detalhes da Banca'
+    ])
+    <div>
+        @if(auth()->user()->funcao === 'admin')
+            <a href="{{ route('bancas.edit', $banca) }}" class="btn btn-outline-primary">
+                <i class="bi bi-pencil-square"></i> Editar
+            </a>
 
-        <a href="{{ route('bancas.index') }}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Voltar
-        </a>
+            <form action="{{ route('bancas.destroy', $banca) }}" method="POST" class="d-inline"
+                  onsubmit="return confirm('Excluir esta banca?');">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-outline-danger">
+                    <i class="bi bi-trash"></i> Excluir
+                </button>
+            </form>
+        @endif
     </div>
-
-    @if(session('sucesso'))
-        <div class="alert alert-success">{{ session('sucesso') }}</div>
-    @endif
-
-    @if(session('erro'))
-        <div class="alert alert-danger">{{ session('erro') }}</div>
-    @endif
+</div>
 
     @php
         $euSouPresidente = $banca->membros
@@ -240,21 +245,4 @@
             </div>
         </div>
     @endif
-
-    <div class="d-flex gap-2 mt-3">
-        @if(auth()->user()->funcao === 'admin')
-            <a href="{{ route('bancas.edit', $banca) }}" class="btn btn-outline-primary">
-                <i class="bi bi-pencil-square"></i> Editar dados da banca
-            </a>
-
-            <form action="{{ route('bancas.destroy', $banca) }}" method="POST"
-                  onsubmit="return confirm('Excluir esta banca?');">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-outline-danger">
-                    <i class="bi bi-trash"></i> Excluir banca
-                </button>
-            </form>
-        @endif
-    </div>
 @endsection

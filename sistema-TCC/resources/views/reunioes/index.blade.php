@@ -12,11 +12,13 @@
     $podeGerenciar = $podeGerenciar ?? (auth()->user() && auth()->user()->funcao !== 'orientando');
 @endphp
 
-<div class="d-flex align-items-center justify-content-between mb-3">
-    <div>
-        <h1 class="h3 mb-0">Reuniões</h1>
-        <small class="text-muted">Agende, acompanhe e registre reuniões de orientação.</small>
-    </div>
+<div class="d-flex justify-content-between align-items-start mb-3">
+    @include('layouts.voltar_titulo', [
+        'rota' => 'dashboard',
+        'pagAnterior' => 'ao Dashboard',
+        'pagAtual' => 'Reuniões',
+        'descricao' => 'Agende, acompanhe e registre reuniões de orientação.'
+    ])
 
     @if($podeGerenciar)
         <a href="{{ route('reunioes.create') }}" class="btn btn-primary">
@@ -84,15 +86,15 @@
                                     </a>
 
                                     @if($podeGerenciar)
-                                        <a class="btn btn-sm btn-outline-primary" href="{{ route('reunioes.edit', $reuniao) }}">
-                                            <i class="bi bi-pencil-square"></i> Editar
+                                        <a title="Editar" class="btn btn-sm btn-outline-primary" href="{{ route('reunioes.edit', $reuniao) }}">
+                                            <i class="bi bi-pencil-square"></i> 
                                         </a>
                                         <form class="d-inline" action="{{ route('reunioes.destroy', $reuniao) }}" method="POST"
                                             onsubmit="return confirm('Excluir esta reunião?')">
                                             @csrf
                                             @method('DELETE')
-                                            <button class="btn btn-sm btn-outline-danger" type="submit">
-                                                <i class="bi bi-trash"></i> Excluir
+                                            <button title="Excluir" class="btn btn-sm btn-outline-danger" type="submit">
+                                                <i class="bi bi-trash"></i>
                                             </button>
                                         </form>
                                     @endif
