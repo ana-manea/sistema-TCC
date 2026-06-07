@@ -14,9 +14,18 @@
         <a class="btn btn-outline-secondary" href="{{ route('tccs.historico', $tcc) }}">
             <i class="bi bi-clock-history"></i> Ver Histórico
         </a>
-        <a class="btn btn-outline-primary" href="{{ route('tccs.edit', $tcc) }}">
-            <i class="bi bi-pencil-square"></i> Editar
-        </a>
+
+        @php
+            $authUser = Auth::user();
+            $podeEditarTcc = $authUser->funcao === 'admin'
+                || ($authUser->funcao === 'orientando' && $authUser->orientando && $tcc->orientandos->contains('id', $authUser->orientando->id));
+        @endphp
+
+        @if($podeEditarTcc)
+            <a class="btn btn-outline-primary" href="{{ route('tccs.edit', $tcc) }}">
+                <i class="bi bi-pencil-square"></i> Editar
+            </a>
+        @endif
     </div>
 </div>
 
@@ -117,9 +126,11 @@
                 <i class="bi bi-hourglass"></i>
                 Nenhuma banca cadastrada para este TCC.
             </div>
-            <a class="btn btn-outline-primary" href="{{ route('bancas.create') }}">
-                <i class="bi bi-pencil-square"></i> Agendar Banca
-            </a>
+            @if(Auth::user()->funcao === 'admin')
+                <a class="btn btn-outline-primary" href="{{ route('bancas.create') }}">
+                    <i class="bi bi-pencil-square"></i> Agendar Banca
+                </a>
+            @endif
         @endif
         {{-- Feedbacks --}}
         <div class="card-header bg-white border-bottom-0 pt-3 d-flex justify-content-between align-items-center">

@@ -1,19 +1,26 @@
 @extends('layouts.app')
 
+@section('title', 'Editar Feedback')
 
 @section('content')
 <div class="container mt-4">
-    <h3>Editar Feedback</h3>
-    <form action="{{ route('feedbacks.update', $feedback->id) }}" method="POST">
-        @csrf
-        @method('PUT')
+    <div class="card shadow-sm">
+        <div class="card-header">
+            <i class="bi bi-pencil-square"></i> Editar Feedback
+        </div>
+        <div class="card-body">
+            <form action="{{ route('feedbacks.update', $feedback) }}" method="POST">
+                @csrf
+                @method('PUT')
 
+                @include('feedbacks._form')
 
-        @include('feedbacks._form')
-
-
-        <button type="submit" class="btn btn-success">Atualizar Feedback</button>
-        <a href="{{ route('feedbacks.index') }}" class="btn btn-secondary">Cancelar</a>
-    </form>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Atualizar Feedback</button>
+                    <a href="{{ route('feedbacks.index') }}" class="btn btn-outline-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 @endsection

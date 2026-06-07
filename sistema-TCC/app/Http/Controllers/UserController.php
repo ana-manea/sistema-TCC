@@ -32,15 +32,15 @@ class UserController extends Controller
         $user = Auth::user();
 
         $dados = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'name'     => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'password' => ['nullable', 'min:6'],
-            'avatar' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'avatar'   => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
 
             // Campos específicos do orientador no próprio perfil
-            'area_atuacao' => ['nullable', 'required_if:funcao,orientador', 'string', 'max:255'],
-            'disponibilidade' => ['nullable', 'required_if:funcao,orientador', 'string'],
-            'max_orientandos' => ['nullable', 'required_if:funcao,orientador', 'integer', 'min:1', 'max:8'],
+            'area_atuacao'    => ['nullable', 'string', 'max:255'],
+            'disponibilidade' => ['nullable', 'string'],
+            'max_orientandos' => ['nullable', 'integer', 'min:1', 'max:8'],
         ]);
 
         if (!empty($dados['password'])) {
@@ -53,15 +53,15 @@ class UserController extends Controller
 
         // A função nunca é alterada pelo próprio usuário no perfil.
         $user->update([
-            'name' => $dados['name'],
-            'email' => $dados['email'],
+            'name'     => $dados['name'],
+            'email'    => $dados['email'],
             'password' => $dados['password'] ?? $user->password,
-            'avatar' => $dados['avatar'],
+            'avatar'   => $dados['avatar'],
         ]);
 
         if ($user->funcao === 'orientador' && $user->orientador) {
             $user->orientador->update([
-                'area_atuacao' => $dados['area_atuacao'] ?? $user->orientador->area_atuacao,
+                'area_atuacao'    => $dados['area_atuacao'] ?? $user->orientador->area_atuacao,
                 'disponibilidade' => $dados['disponibilidade'] ?? $user->orientador->disponibilidade,
                 'max_orientandos' => $dados['max_orientandos'] ?? $user->orientador->max_orientandos,
             ]);
@@ -100,47 +100,47 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $dados = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email','max:255', 'unique:users,email'],
+            'name'     => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'email','max:255', 'unique:users,email'],
             'password' => ['required','min:6'],
-            'funcao' => ['required','in:admin,orientador,orientando,membro_banca'],
-            'avatar' => ['nullable','regex:/^#[0-9A-Fa-f]{6}$/'],
+            'funcao'   => ['required','in:admin,orientador,orientando,membro_banca'],
+            'avatar'   => ['nullable','regex:/^#[0-9A-Fa-f]{6}$/'],
 
             // Validações do Orientando
             'matricula' => ['nullable','required_if:funcao,orientando','string','max:255','unique:orientandos,matricula'],
-            'curso' => ['nullable','required_if:funcao,orientando','string','max:255'],
-            'semestre' => ['nullable','integer','min:1'],
+            'curso'     => ['nullable','required_if:funcao,orientando','string','max:255'],
+            'semestre'  => ['nullable','integer','min:1'],
 
             // Validações do Orientador
-            'area_atuacao' => ['nullable','required_if:funcao,orientador', 'string', 'max:255'],
+            'area_atuacao'    => ['nullable','required_if:funcao,orientador', 'string', 'max:255'],
             'disponibilidade' => ['nullable','required_if:funcao,orientador', 'string'],
             'max_orientandos' => ['nullable','required_if:funcao,orientador', 'integer', 'min:1', 'max:8'],
         ]);
 
         $user = User::create([
-            'name' => $dados['name'],
-            'email' => $dados['email'],
+            'name'     => $dados['name'],
+            'email'    => $dados['email'],
             'password' => bcrypt($dados['password']),
-            'funcao' => $dados['funcao'],
-            'avatar' => $dados['avatar'] ?? '#b20000',
+            'funcao'   => $dados['funcao'],
+            'avatar'   => $dados['avatar'] ?? '#b20000',
         ]);
 
         // Criar orientando
         if ($dados['funcao'] === 'orientando') {
             Orientando::create([
-                'user_id' => $user->id,
+                'user_id'       => $user->id,
                 'orientador_id' => null,
-                'matricula' => $dados['matricula'] ?? null,
-                'curso' => $dados['curso'] ?? null,
-                'semestre' => $dados['semestre'] ?? null,
+                'matricula'     => $dados['matricula'] ?? null,
+                'curso'         => $dados['curso'] ?? null,
+                'semestre'      => $dados['semestre'] ?? null,
             ]);
         }
 
         // Criar orientador
         if ($dados['funcao'] === 'orientador') {
             Orientador::create([
-                'user_id' => $user->id,
-                'area_atuacao' => $dados['area_atuacao'] ?? null,
+                'user_id'         => $user->id,
+                'area_atuacao'    => $dados['area_atuacao'] ?? null,
                 'disponibilidade' => $dados['disponibilidade'] ?? null,
                 'max_orientandos' => $dados['max_orientandos'] ?? 8,
             ]);
@@ -161,7 +161,6 @@ class UserController extends Controller
         /** @var \App\Models\User $authUser */
         $authUser = Auth::user();
 
-        // Regra: admin não pode editar a si próprio nem outro admin.
         if (
             $authUser->funcao === 'admin'
             && (
@@ -182,7 +181,7 @@ class UserController extends Controller
         /** @var \App\Models\User $authUser */
         $authUser = Auth::user();
 
-        // Regra: admin não pode editar a si próprio nem outro admin.
+        // Admin não pode editar a si próprio nem outro admin.
         if (
             $authUser->funcao === 'admin'
             && (
@@ -196,24 +195,24 @@ class UserController extends Controller
         }
 
         $dados = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email','max:255', 'unique:users,email,' . $user->id],
+            'name'     => ['required', 'string', 'max:255'],
+            'email'    => ['required', 'email','max:255', 'unique:users,email,' . $user->id],
             'password' => ['nullable','min:6'],
-            'funcao' => ['required','in:admin,orientador,orientando,membro_banca'],
-            'avatar' => ['nullable','regex:/^#[0-9A-Fa-f]{6}$/'],
+            'funcao'   => ['required','in:admin,orientador,orientando,membro_banca'],
+            'avatar'   => ['nullable','regex:/^#[0-9A-Fa-f]{6}$/'],
 
             'matricula' => ['nullable','required_if:funcao,orientando','string','max:255'],
-            'curso' => ['nullable','required_if:funcao,orientando','string','max:255'],
-            'semestre' => ['nullable','integer','min:1'],
+            'curso'     => ['nullable','required_if:funcao,orientando','string','max:255'],
+            'semestre'  => ['nullable','integer','min:1'],
 
-            'area_atuacao' => ['nullable','required_if:funcao,orientador', 'string', 'max:255'],
+            'area_atuacao'    => ['nullable','required_if:funcao,orientador', 'string', 'max:255'],
             'disponibilidade' => ['nullable','required_if:funcao,orientador', 'string'],
             'max_orientandos' => ['nullable','required_if:funcao,orientador', 'integer', 'min:1', 'max:8'],
         ]);
 
         $dadosUsuario = [
-            'name' => $dados['name'],
-            'email' => $dados['email'],
+            'name'   => $dados['name'],
+            'email'  => $dados['email'],
             'funcao' => $dados['funcao'],
             'avatar' => $dados['avatar'] ?? '#b20000',
         ];
@@ -229,16 +228,16 @@ class UserController extends Controller
             if ($user->orientando) {
                 $user->orientando->update([
                     'matricula' => $dados['matricula'] ?? $user->orientando->matricula,
-                    'curso' => $dados['curso'] ?? $user->orientando->curso,
-                    'semestre' => $dados['semestre'] ?? $user->orientando->semestre,
+                    'curso'     => $dados['curso'] ?? $user->orientando->curso,
+                    'semestre'  => $dados['semestre'] ?? $user->orientando->semestre,
                 ]);
             } else {
                 Orientando::create([
-                    'user_id' => $user->id,
+                    'user_id'       => $user->id,
                     'orientador_id' => null,
-                    'matricula' => $dados['matricula'] ?? null,
-                    'curso' => $dados['curso'] ?? null,
-                    'semestre' => $dados['semestre'] ?? null,
+                    'matricula'     => $dados['matricula'] ?? null,
+                    'curso'         => $dados['curso'] ?? null,
+                    'semestre'      => $dados['semestre'] ?? null,
                 ]);
             }
         } else {
@@ -252,14 +251,14 @@ class UserController extends Controller
         if ($dados['funcao'] === 'orientador') {
             if ($user->orientador) {
                 $user->orientador->update([
-                    'area_atuacao' => $dados['area_atuacao'] ?? $user->orientador->area_atuacao,
+                    'area_atuacao'    => $dados['area_atuacao'] ?? $user->orientador->area_atuacao,
                     'disponibilidade' => $dados['disponibilidade'] ?? $user->orientador->disponibilidade,
                     'max_orientandos' => $dados['max_orientandos'] ?? $user->orientador->max_orientandos,
                 ]);
             } else {
                 Orientador::create([
                     'user_id' => $user->id,
-                    'area_atuacao' => $dados['area_atuacao'] ?? null,
+                    'area_atuacao'    => $dados['area_atuacao'] ?? null,
                     'disponibilidade' => $dados['disponibilidade'] ?? null,
                     'max_orientandos' => $dados['max_orientandos'] ?? 8,
                 ]);
@@ -281,7 +280,7 @@ class UserController extends Controller
         /** @var \App\Models\User $authUser */
         $authUser = Auth::user();
 
-        // Regra: admin não pode excluir a si próprio nem outro admin.
+        // Admin não pode excluir a si próprio nem outro admin.
         if (
             $authUser->funcao === 'admin'
             && (

@@ -14,41 +14,41 @@ class OrientandoController extends Controller
     {
         $orientandos = Orientando::with(['user', 'orientador.user'])->latest()->get();
 
-        return view('orientando.index', compact('orientandos'));
+        return view('orientandos.index', compact('orientandos'));
     }
 
     public function create()
     {
         $users = User::orderBy('name')->get();
-        return view('orientando.create', compact('users'));
+        return view('orientandos.create', compact('users'));
     }
 
     public function show(Orientando $orientando)
     {
         $orientando->load(['user', 'orientador.user']);
 
-        return view('orientando.show', compact('orientando'));
+        return view('orientandos.show', compact('orientando'));
     }
 
     public function edit(Orientando $orientando)
     {
         $orientadores = Orientador::with('user')->get();
-        return view('orientando.edit', compact('orientando', 'orientadores'));
+        return view('orientandos.edit', compact('orientando', 'orientadores'));
     }
 
     public function update(Request $request, Orientando $orientando)
     {
         $dados = $request->validate([
             'matricula' => ['required', 'string', 'max:255', 'unique:orientandos,matricula,' . $orientando->id],
-            'curso' => ['required', 'string', 'max:255'],
-            'semestre' => ['nullable', 'integer', 'min:1', 'max:6'],
+            'curso'     => ['required', 'string', 'max:255'],
+            'semestre'  => ['nullable', 'integer', 'min:1', 'max:6'],
         ], [
             'matricula.required' => 'Informe a matrícula.',
-            'matricula.unique' => 'Esta matrícula já está cadastrada.',
-            'curso.required' => 'Informe o curso.',
-            'semestre.integer' => 'O semestre deve ser um número inteiro.',
-            'semestre.min' => 'O semestre mínimo é 1.',
-            'semestre.max' => 'O semestre máximo é 6.',
+            'matricula.unique'   => 'Esta matrícula já está cadastrada.',
+            'curso.required'     => 'Informe o curso.',
+            'semestre.integer'   => 'O semestre deve ser um número inteiro.',
+            'semestre.min'       => 'O semestre mínimo é 1.',
+            'semestre.max'       => 'O semestre máximo é 6.',
         ]);
 
         $orientando->update($dados);

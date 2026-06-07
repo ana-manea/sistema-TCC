@@ -1,11 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Nova Avaliação')
+@section('title', 'Editar Avaliação')
 
 @section('content')
 @php
-    $horasDecorridas  = $avaliacaoBanca->created_at->diffInHours(now());
-    $horasRestantes   = max(0, 48 - $horasDecorridas);
+    $banca = $avaliacaoBanca->banca;
+    $horasDecorridas = $avaliacaoBanca->created_at->diffInHours(now());
+    $horasRestantes = max(0, 48 - $horasDecorridas);
     $minutosRestantes = max(0, 48 * 60 - $avaliacaoBanca->created_at->diffInMinutes(now()));
 @endphp
 
@@ -21,24 +22,25 @@
 <div class="card">
     <div class="card-body">
         @if($errors->any())
-            <ul style="color: red;">
+            <div class="alert alert-danger">
                 @foreach($errors->all() as $erro)
-                    <li>{{ $erro }}</li>
+                    {{ $erro }}<br>
                 @endforeach
-            </ul>
+            </div>
         @endif
         {{-- Exibe o tempo restante para edição --}}
-        <p style="color: orange;">
-            <strong>Atenção:</strong> Você pode editar esta avaliação por até 48h após o envio.<br>
+        <div class="alert alert-warning">
+            Você pode editar esta avaliação por até 48h após o envio.<br>
             Tempo restante: <strong>{{ $horasRestantes }}h {{ $minutosRestantes % 60 }}min</strong>
-        </p>
-        <form action="{{ route('avaliacoes.update', $banca) }}" method="POST" class="vstack gap-3">
+        </div>
+
+        <form action="{{ route('avaliacoes.update', $avaliacaoBanca) }}" method="POST" class="vstack gap-3">
             @method('PUT')
-            @include('avaliacoes._form', ['avaliacao' => $avaliacao])
+            @include('avaliacoes._form', ['avaliacaoBanca' => $avaliacaoBanca])
 
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-primary">Salvar</button>
-                <a href="{{ route('bancas.index') }}" class="btn btn-outline-secondary">Cancelar</a>
+                <a href="{{ route('bancas.show', $banca) }}" class="btn btn-outline-secondary">Cancelar</a>
             </div>
         </form>
     </div>

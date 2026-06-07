@@ -16,7 +16,7 @@
                 'Orientandos' => $indicadores['orientandos'],
                 'TCCs' => $indicadores['tccs'],
                 'Bancas' => $indicadores['bancas'],
-                'Entregas pendentes' => $indicadores['entregas_pendentes'],
+                'Reuniões' => $indicadores['reunioes'],
             ] as $label => $valor)
                 <div class="col-sm-6 col-xl-4">
                     <div class="card stat-card h-100">

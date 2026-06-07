@@ -20,7 +20,17 @@ class BancaController extends Controller
     {
         $statusFiltro = $request->input('status');
 
-        $query = Banca::with(['tcc', 'membros', 'avaliacoes']);
+        $usuarioLogado = Auth::user();
+
+        $query = Banca::with(['tcc.orientador.user', 'tcc.orientandos.user', 'membros.user', 'avaliacoes']);
+
+        if ($usuarioLogado->funcao === 'orientador' && $usuarioLogado->orientador) {
+            $query->whereHas('tcc', fn ($q) => $q->where('orientador_id', $usuarioLogado->orientador->id));
+        } elseif ($usuarioLogado->funcao === 'orientando' && $usuarioLogado->orientando) {
+            $query->whereHas('tcc.orientandos', fn ($q) => $q->where('orientandos.id', $usuarioLogado->orientando->id));
+        } elseif ($usuarioLogado->funcao === 'membro_banca') {
+            $query->whereHas('membros', fn ($q) => $q->where('user_id', $usuarioLogado->id));
+        }
 
         if ($statusFiltro) {
             $query->where('status', $statusFiltro);
@@ -40,6 +50,8 @@ class BancaController extends Controller
      */
     public function create()
     {
+        $this->autorizarAdmin();
+
         // Apenas TCCs sem banca podem receber uma nova banca
         $tccs = Tcc::with(['orientador.user', 'orientandos.user'])
             ->whereDoesntHave('banca')
@@ -61,6 +73,8 @@ class BancaController extends Controller
      */
     public function store(Request $request)
     {
+        $this->autorizarAdmin();
+
         $request->validate([
             'tcc_id'            => 'required|integer|exists:tccs,id|unique:bancas,tcc_id',
             'data_hora'         => 'required|date',
@@ -125,6 +139,8 @@ class BancaController extends Controller
      */
     public function show(Banca $banca)
     {
+        $this->autorizarVisualizacao($banca);
+
         $banca->load([
             'tcc.orientandos.user',
             'tcc.orientador.user',
@@ -141,6 +157,8 @@ class BancaController extends Controller
      */
     public function edit(Banca $banca)
     {
+        $this->autorizarAdmin();
+
         $banca->load(['membros', 'tcc.orientador.user', 'tcc.orientandos.user']);
 
         // Na edição, lista TCCs sem banca e também mantém o TCC atual da banca.
@@ -162,8 +180,10 @@ class BancaController extends Controller
     /**
      * Atualiza data, local, status e membros da banca.
      */
-    public function update(Request $request, Banca $banca)
+   public function update(Request $request, Banca $banca)
     {
+        $this->autorizarAdmin();
+
         $request->validate([
             'tcc_id'            => 'required|integer|exists:tccs,id|unique:bancas,tcc_id,' . $banca->id,
             'data_hora'         => 'required|date',
@@ -224,6 +244,8 @@ class BancaController extends Controller
      */
     public function destroy(Banca $banca)
     {
+        $this->autorizarAdmin();
+
         $banca->delete();
 
         return redirect()->route('bancas.index')->with('sucesso', 'Banca excluída com sucesso!');
@@ -255,7 +277,7 @@ class BancaController extends Controller
      * Exibe a tela de fechamento da banca para o Presidente.
      * Função: "Fechamento Banca" — mostra as notas já lançadas e a média calculada.
      */
-    public function telaFechamento(Banca $banca)
+   public function telaFechamento(Banca $banca)
     {
         $eOPresidente = BancaMembro::where('banca_id', $banca->id)
             ->where('user_id', Auth::id())
@@ -383,5 +405,39 @@ class BancaController extends Controller
         }
 
         return view('bancas.ata', compact('banca'));
+    }
+
+    // Restringe as ações aos admins
+    private function autorizarAdmin(): void
+    {
+        if (Auth::user()?->funcao !== 'admin') {
+            abort(403, 'Somente administradores podem executar esta ação.');
+        }
+    }
+
+    // Limita a visualização de acordo com o perfil
+    private function autorizarVisualizacao(Banca $banca): void
+    {
+        $user = Auth::user();
+
+        if ($user->funcao === 'admin') {
+            return;
+        }
+
+        $banca->loadMissing('tcc.orientandos', 'tcc.orientador', 'membros');
+
+        if ($user->funcao === 'membro_banca' && $banca->membros->contains('user_id', $user->id)) {
+            return;
+        }
+
+        if ($user->funcao === 'orientador' && $user->orientador && $banca->tcc?->orientador_id === $user->orientador->id) {
+            return;
+        }
+
+        if ($user->funcao === 'orientando' && $user->orientando && $banca->tcc?->orientandos->contains('id', $user->orientando->id)) {
+            return;
+        }
+
+        abort(403, 'Você não tem permissão para visualizar esta banca.');
     }
 }
