@@ -3,40 +3,31 @@
 @section('title', 'Nova Avaliação')
 
 @section('content')
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="card-header">Avaliação da Banca — TCC Nº {{ $banca->tcc_id }}</div>
-            <hr>
-            @if ($errors->any())
+<div class="d-flex justify-content-between align-items-start mb-3">
+    @include('layouts.voltar_titulo', [
+        'rota' => 'bancas.show',
+        'variavel' => $banca,
+        'pagAnterior' => 'à Banca',
+        'pagAtual' => 'Avaliação da Banca — TCC Nº' . $banca->tcc_id
+    ])
+</div>
+
+<div class="card">
+    <div class="card-body">
+        @if ($errors->any())
             @foreach ($errors->all() as $error)
                 {{ $error }}<br>
             @endforeach
-            @endif
-            <div class="card-body">
-                <form action="{{ route('avaliacoes.store', $banca->id) }}" method="POST">
-                    @csrf
+        @endif
 
-        <div style="margin-bottom: 15px;">
-            <label for="nota" style="display: block; font-weight: bold;">Nota da Avaliação (0 a 10):</label>
-            <input type="number" step="0.1" min="0" max="10" name="nota" id="nota" value="{{ old('nota') }}" required>
-            @error('nota')
-                <span style="color: red;">{{ $message }}</span>
-            @enderror
-        </div>
+        <form action="{{ route('avaliacoes.store') }}" method="POST" class="vstack gap-3">
+            @include('avaliacoes._form')
 
-        <div style="margin-bottom: 15px;">
-            <label for="parecer" style="display: block; font-weight: bold;">Parecer / Justificativa:</label>
-            <textarea name="parecer" id="parecer" rows="5" cols="50" placeholder="Digite aqui as considerações e feedbacks..." required>{{ old('parecer') }}</textarea>
-            @error('parecer')
-                <span style="color: red;">{{ $message }}</span>
-            @enderror
-        </div>
-
-        <div>
-            <a href="{{ route('bancas.index') }}">Cancelar</a>
-            <button type="submit">Salvar Avaliação</button>
-        </div>
-    </form>
-
-</body>
-</html>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Salvar</button>
+                <a href="{{ route('bancas.index') }}" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+@endsection
