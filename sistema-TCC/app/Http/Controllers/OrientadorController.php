@@ -20,6 +20,10 @@ class OrientadorController extends Controller
     // 3. FORMULÁRIO DE CRIAÇÃO
     public function create()
     {
+        if (Auth::user()->funcao !== 'admin') {
+            abort(403);
+        }
+
         $users = User::orderBy('name')->get();
         return view('orientadores.create', compact('users'));
     }
@@ -27,11 +31,15 @@ class OrientadorController extends Controller
     // 4. SALVAR
     public function store(Request $request)
     {
+        if (Auth::user()->funcao !== 'admin') {
+            abort(403);
+        }
+
         $dados = $request->validate([
             'user_id'         => ['required', 'exists:users,id', 'unique:orientadores,user_id'],
             'area_atuacao'    => ['required', 'string', 'max:255'],
             'disponibilidade' => ['required', 'string'],
-            'max_orientandos' => ['required', 'integer', 'min:1', 'max:8'],
+            'max_orientandos' => ['required', 'integer', 'min:1', 'max:50'],
         ]);
 
         Orientador::create($dados);
@@ -47,41 +55,94 @@ class OrientadorController extends Controller
     }
 
     // 6. FORMULÁRIO DE EDIÇÃO (Do próprio orientador logado)
-    public function edit()
+    public function edit(Orientador $orientador)
     {
-        $orientador = Orientador::where('user_id', Auth::id())->firstOrFail();
+        $this->autorizarGerenciar($orientador);
+
         return view('orientadores.edit', compact('orientador'));
     }
 
     // 7. ATUALIZAR (Do próprio orientador logado)
-    public function update(Request $request)
+    public function update(Request $request, Orientador $orientador)
     {
-        $orientador = Orientador::where('user_id', Auth::id())->firstOrFail();
+        $this->autorizarGerenciar($orientador);
 
         $dados = $request->validate([
+            'name'            => ['required', 'string', 'max:255'],
+            'email'           => ['required', 'email', 'max:255', 'unique:users,email,' . $orientador->user_id],
+            'password'        => ['nullable', 'min:6'],
+            'avatar'          => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'area_atuacao'    => ['required', 'string', 'max:255'],
             'disponibilidade' => ['required', 'string'],
-            'max_orientandos' => ['required', 'integer', 'min:1', 'max:8'],
+            'max_orientandos' => ['required', 'integer', 'min:1', 'max:50'],
         ]);
 
-        $orientador->update($dados);
+        if ($orientador->user) {
+            $dadosUsuario = [
+                'name'   => $dados['name'],
+                'email'  => $dados['email'],
+                'avatar' => $dados['avatar'] ?? $orientador->user->avatar,
+            ];
 
-        return redirect()->route('orientador.dashboard')->with('sucesso', 'Perfil atualizado com sucesso!');
+            if (!empty($dados['password'])) {
+                $dadosUsuario['password'] = bcrypt($dados['password']);
+            }
+
+            $orientador->user->update($dadosUsuario);
+        }
+
+        $orientador->update([
+            'area_atuacao'    => $dados['area_atuacao'],
+            'disponibilidade' => $dados['disponibilidade'],
+            'max_orientandos' => $dados['max_orientandos'],
+        ]);
+
+        return redirect()->route('orientadores.show', $orientador)->with('sucesso', 'Orientador atualizado com sucesso!');
     }
 
     // 8. MEUS ORIENTANDOS
-    public function meusOrientandos()
+    public function meusOrientandos(?Orientador $orientador = null)
     {
-        $orientador = Orientador::where('user_id', Auth::id())->firstOrFail();
+        $user = Auth::user();
+        $orientador = $orientador ?: $user->orientador;
+
+        if (!$orientador) {
+            abort(404);
+        }
+
+        if ($user->funcao === 'orientador' && (int) $orientador->user_id !== (int) $user->id) {
+            abort(403);
+        }
+
         $orientandos = $orientador->orientandos()->with('user')->get();
-        
+
         return view('orientadores.meus_orientandos', compact('orientador', 'orientandos'));
     }
 
     // 9. EXCLUIR
     public function destroy(Orientador $orientador)
     {
+        if (Auth::user()->funcao !== 'admin') {
+            abort(403);
+        }
+
         $orientador->delete();
         return redirect()->route('orientadores.index')->with('sucesso', 'Orientador removido com sucesso!');
+    }
+
+    // Limita quem pode alterar as infos do orientador
+    private function autorizarGerenciar(Orientador $orientador): void
+    {
+        $user = Auth::user();
+
+        if ($user->funcao === 'admin') {
+            return;
+        }
+
+        if ($user->funcao === 'orientador' && (int) $orientador->user_id === (int) $user->id) {
+            return;
+        }
+
+        abort(403, 'Você não tem permissão para alterar este orientador.');
     }
 }
