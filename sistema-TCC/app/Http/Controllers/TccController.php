@@ -18,7 +18,12 @@ class TccController extends Controller
      */
     public function index()
     {
+        $user = Auth::user();
+
         $tccs = Tcc::with(['orientador.user', 'orientandos.user', 'banca'])
+            ->when($user->funcao === 'orientador' && $user->orientador, fn ($q) => $q->where('orientador_id', $user->orientador->id))
+            ->when($user->funcao === 'orientando' && $user->orientando, fn ($q) => $q->whereHas('orientandos', fn ($oq) => $oq->where('orientandos.id', $user->orientando->id)))
+            ->when($user->funcao === 'membro_banca', fn ($q) => $q->whereHas('banca.membros', fn ($mq) => $mq->where('user_id', $user->id)))
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -30,6 +35,12 @@ class TccController extends Controller
      */
     public function create()
     {
+        $user = Auth::user();
+
+        if (!in_array($user->funcao, ['admin', 'orientando'], true)) {
+            abort(403, 'Apenas administrador ou orientando podem criar TCC.');
+        }
+
         $orientadores = Orientador::with('user')->get();
 
         return view('tccs.create', compact('orientadores'));
@@ -41,6 +52,12 @@ class TccController extends Controller
      */
     public function store(Request $request)
     {
+        $user = Auth::user();
+
+        if (!in_array($user->funcao, ['admin', 'orientando'], true)) {
+            abort(403, 'Apenas administrador ou orientando podem criar TCC.');
+        }
+
         $dados = $request->validate([
             'orientador_id' => ['nullable', 'exists:orientadores,id'],
             'tema'          => ['required', 'min:3', 'max:255'],
@@ -49,6 +66,10 @@ class TccController extends Controller
         ]);
 
         $tcc = Tcc::create($dados);
+
+        if ($user->funcao === 'orientando' && $user->orientando) {
+            $tcc->orientandos()->syncWithoutDetaching([$user->orientando->id]);
+        }
 
         HistoricoTcc::create([
             'tcc_id'          => $tcc->id,
@@ -69,6 +90,8 @@ class TccController extends Controller
      */
     public function show(Tcc $tcc)
     {
+        $this->autorizarVisualizacao($tcc);
+
         $tcc->load([
             'orientador.user',
             'orientandos.user',
@@ -86,6 +109,8 @@ class TccController extends Controller
      */
     public function edit(Tcc $tcc)
     {
+        $this->autorizarEdicao($tcc);
+
         $orientadores = Orientador::with('user')->get();
 
         return view('tccs.edit', compact('tcc', 'orientadores'));
@@ -97,6 +122,8 @@ class TccController extends Controller
      */
     public function update(Request $request, Tcc $tcc)
     {
+        $this->autorizarEdicao($tcc);
+
         $dados = $request->validate([
             'orientador_id' => ['nullable', 'exists:orientadores,id'],
             'tema'          => ['required', 'min:3', 'max:255'],
@@ -107,8 +134,8 @@ class TccController extends Controller
 
         $statusAnterior = $tcc->status;
 
-        // 'observacao' é só para o histórico — não existe na tabela tccs
-        $tcc->update(Arr::except($dados, ['observacao']));
+        // 'observacao' é só para o histórico — não existe na tabela tccs. Nota final e resultado final nunca são atualizados por este formulário.
+        $tcc->update(Arr::except($dados, ['observacao', 'nota_final', 'resultado_final']));
 
         // Registra histórico apenas se o status mudou
         if ($statusAnterior !== $dados['status']) {
@@ -131,6 +158,8 @@ class TccController extends Controller
      */
     public function destroy(Tcc $tcc)
     {
+        $this->autorizarEdicao($tcc);
+
         $tcc->delete();
 
         return redirect()
@@ -144,13 +173,17 @@ class TccController extends Controller
      */
     public function emAndamento()
     {
-        if (Auth::check() && Auth::user()->funcao === 'membro_banca') {
-            abort(403, 'Membros da banca nao acessam a lista de TCCs em andamento.');
+        $user = Auth::user();
+
+        if ($user->funcao === 'membro_banca') {
+            abort(403, 'Membros da banca não acessam a lista de TCCs em andamento.');
         }
 
         $tccs = Tcc::with(['orientador.user', 'orientandos.user'])
             ->withCount(['tarefas', 'entregas', 'reunioes'])
             ->where('status', 'em_andamento')
+            ->when($user->funcao === 'orientador' && $user->orientador, fn ($q) => $q->where('orientador_id', $user->orientador->id))
+            ->when($user->funcao === 'orientando' && $user->orientando, fn ($q) => $q->whereHas('orientandos', fn ($oq) => $oq->where('orientandos.id', $user->orientando->id)))
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -162,11 +195,53 @@ class TccController extends Controller
      */
     public function historico(Tcc $tcc)
     {
+        $this->autorizarVisualizacao($tcc);
+
         $historicos = HistoricoTcc::with('alteradoPor')
             ->where('tcc_id', $tcc->id)
             ->orderBy('created_at', 'desc')
             ->get();
 
         return view('tccs.historico', compact('tcc', 'historicos'));
+    }
+
+    // Limita a visualização apenas para quem está autorizado/vinculado
+    private function autorizarVisualizacao(Tcc $tcc): void
+    {
+        $user = Auth::user();
+
+        if ($user->funcao === 'admin') {
+            return;
+        }
+
+        if ($user->funcao === 'orientador' && $user->orientador && $tcc->orientador_id === $user->orientador->id) {
+            return;
+        }
+
+        if ($user->funcao === 'orientando' && $user->orientando && $tcc->orientandos()->where('orientandos.id', $user->orientando->id)->exists()) {
+            return;
+        }
+
+        if ($user->funcao === 'membro_banca' && $tcc->banca?->membros()->where('user_id', $user->id)->exists()) {
+            return;
+        }
+
+        abort(403, 'Você não tem permissão para acessar este TCC.');
+    }
+
+    // Limita a edição apenas para quem está autorizado/vincluado
+    private function autorizarEdicao(Tcc $tcc): void
+    {
+        $user = Auth::user();
+
+        if ($user->funcao === 'admin') {
+            return;
+        }
+
+        if ($user->funcao === 'orientando' && $user->orientando && $tcc->orientandos()->where('orientandos.id', $user->orientando->id)->exists()) {
+            return;
+        }
+
+        abort(403, 'Você não tem permissão para editar este TCC.');
     }
 }
