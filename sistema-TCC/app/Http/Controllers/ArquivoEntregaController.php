@@ -32,35 +32,35 @@ class ArquivoEntregaController extends Controller
     // Faz o upload e salva o registro
     public function store(Request $request)
     {
-        // CORRIGIDO: faz upload do arquivo de verdade
-        // O original salvava um texto qualquer como arquivo_path
-        
         $dados = $request->validate([
-            'entrega_id' => ['required','integer','exists:entregas,id'],
-            'arquivo' => ['required','file','mimes:pdf,doc,docx','max:20480'],
-            'observacao' => ['nullable','string'],
+            'entrega_id' => ['required', 'integer', 'exists:entregas,id'],
+            'arquivo'    => ['required', 'file', 'mimes:pdf,doc,docx', 'max:20480'],
+            'observacao' => ['nullable', 'string'],
         ]);
 
         $entrega = Entrega::with('tcc')->findOrFail($dados['entrega_id']);
         $this->autorizarEntrega($entrega, true);
 
         $versao = ((int) ArquivoEntrega::where('entrega_id', $entrega->id)->max('versao')) + 1;
-        // Salva em storage/app/public/entregas — acessível via storage:link
-        $path = $request->file('arquivo')->store('entregas/' . $entrega->id, 'public');
+        $path   = $request->file('arquivo')->store('entregas/' . $entrega->id, 'public');
 
         $arquivo = ArquivoEntrega::create([
-            'entrega_id' => $entrega->id,
-            'enviado_por' => Auth::id(),
-            'arquivo_path' => $path,
-            'versao' => $versao,
-            'observacao' => $dados['observacao'] ?? null,
+            'entrega_id'       => $entrega->id,
+            'enviado_por'      => Auth::id(),
+            'arquivo_path'     => $path,
+            'versao'           => $versao,
+            'observacao'       => $dados['observacao'] ?? null,
             'status_validacao' => 'pendente',
         ]);
 
         $entrega->update(['status' => 'entregue']);
-        $this->registrarHistorico($entrega, 'Arquivo enviado para a entrega "' . $entrega->titulo . '". Versão ' . $arquivo->versao . '.');
+        $this->registrarHistorico(
+            $entrega,
+            'Arquivo enviado para a entrega "' . $entrega->titulo . '". Versão ' . $arquivo->versao . '.'
+        );
 
-        return redirect()->route($this->rota('arquivos_entrega.index'))->with('sucesso', 'Arquivo enviado com sucesso!');
+        return redirect()->route('arquivos_entrega.index')
+            ->with('sucesso', 'Arquivo enviado com sucesso!');
     }
 
     // Exibe detalhes de um arquivo
@@ -72,54 +72,83 @@ class ArquivoEntregaController extends Controller
         return view('arquivos_entrega.show', compact('arquivoEntrega'));
     }
 
-    // Abre o formulário de edição (só observação e status)
+    // Abre o formulário de edição
+    // CORRIGIDO: usa autorizarEntrega() para que aluno também possa acessar
     public function edit(ArquivoEntrega $arquivoEntrega)
     {
         $arquivoEntrega->load('entrega.tcc');
-        $this->autorizarValidacao($arquivoEntrega->entrega);
+        $this->autorizarEntrega($arquivoEntrega->entrega);
+
         $entregas = $this->entregasPermitidasParaFormulario();
 
         return view('arquivos_entrega.edit', compact('arquivoEntrega', 'entregas'));
     }
 
-    // Atualiza observação e status de validação (não troca o arquivo)
+    // Atualiza o arquivo
+    // CORRIGIDO: aluno só atualiza observação; orientador/admin também atualiza status_validacao
     public function update(Request $request, ArquivoEntrega $arquivoEntrega)
     {
         $arquivoEntrega->load('entrega.tcc');
-        $this->autorizarValidacao($arquivoEntrega->entrega);
+        $this->autorizarEntrega($arquivoEntrega->entrega);
 
-        // Na edição só atualiza observação e status — não troca o arquivo
+        $user = Auth::user();
+
+        // Aluno só pode alterar a observação
+        if ($user->funcao === 'orientando') {
+            $dados = $request->validate([
+                'observacao' => ['nullable', 'string'],
+            ]);
+
+            $arquivoEntrega->update(['observacao' => $dados['observacao'] ?? null]);
+
+            return redirect()->route('arquivos_entrega.index')
+                ->with('sucesso', 'Observação atualizada com sucesso!');
+        }
+
+        // Orientador e admin podem alterar status_validacao e observação
         $dados = $request->validate([
-            'status_validacao' => ['required','in:pendente,validado,rejeitado'],
-            'observacao' => ['nullable','string'],
+            'status_validacao' => ['required', 'in:pendente,validado,rejeitado'],
+            'observacao'       => ['nullable', 'string'],
         ]);
 
         $arquivoEntrega->update($dados);
 
-        $arquivoEntrega->entrega->update([
-            'status' => $dados['status_validacao'] === 'validado' ? 'validado' : ($dados['status_validacao'] === 'rejeitado' ? 'rejeitado' : 'entregue'),
-        ]);
+        // Atualiza status da entrega conforme validação
+        $novoStatusEntrega = match ($dados['status_validacao']) {
+            'validado'  => 'validado',
+            'rejeitado' => 'rejeitado',
+            default     => 'entregue',
+        };
 
-        $this->registrarHistorico($arquivoEntrega->entrega, 'Validação de arquivo atualizada para: ' . $dados['status_validacao']);
+        $arquivoEntrega->entrega->update(['status' => $novoStatusEntrega]);
 
-        return redirect()->route($this->rota('arquivos_entrega.index'))->with('sucesso', 'Arquivo atualizado com sucesso!');
+        $this->registrarHistorico(
+            $arquivoEntrega->entrega,
+            'Validação de arquivo atualizada para: ' . $dados['status_validacao']
+        );
+
+        return redirect()->route('arquivos_entrega.index')
+            ->with('sucesso', 'Arquivo atualizado com sucesso!');
     }
 
-    // Remove o arquivo do disco e o registro do banco
+    // Remove o arquivo — somente admin
     public function destroy(ArquivoEntrega $arquivoEntrega)
     {
         if (Auth::user()->funcao !== 'admin') {
-            abort(403);
+            abort(403, 'Somente o administrador pode excluir arquivos.');
         }
-        // Remove o arquivo físico do disco antes de deletar o registro
+
         if ($arquivoEntrega->arquivo_path && Storage::disk('public')->exists($arquivoEntrega->arquivo_path)) {
             Storage::disk('public')->delete($arquivoEntrega->arquivo_path);
         }
 
         $arquivoEntrega->delete();
 
-        return redirect()->route('arquivos_entrega.index')->with('sucesso', 'Registro removido com sucesso!');
+        return redirect()->route('arquivos_entrega.index')
+            ->with('sucesso', 'Registro removido com sucesso!');
     }
+
+    // ── Helpers privados ──────────────────────────────────────────────────────
 
     private function filtrarTccsPermitidos($query): void
     {
@@ -134,41 +163,39 @@ class ArquivoEntregaController extends Controller
         }
     }
 
-    private function autorizarEntrega(?Entrega $entrega, bool $editar = false): void
+    private function autorizarEntrega(?Entrega $entrega, bool $apenasAluno = false): void
     {
-        if (!$entrega || !$entrega->tcc) { abort(404); }
+        if (!$entrega || !$entrega->tcc) {
+            abort(404);
+        }
 
         $user = Auth::user();
-        if ($user->funcao === 'admin') { return; }
 
-        if ($editar && $user->funcao !== 'orientando') {
+        if ($user->funcao === 'admin') {
+            return;
+        }
+
+        // Somente aluno pode enviar arquivo (store)
+        if ($apenasAluno && $user->funcao !== 'orientando') {
             abort(403, 'Somente o aluno pode enviar arquivo de entrega.');
         }
 
-        if ($user->funcao === 'orientando' && $user->orientando && $entrega->tcc->orientandos()->where('orientandos.id', $user->orientando->id)->exists()) {
+        if ($user->funcao === 'orientando' && $user->orientando
+            && $entrega->tcc->orientandos()->where('orientandos.id', $user->orientando->id)->exists()) {
             return;
         }
 
-        if (!$editar && $user->funcao === 'orientador' && $user->orientador && $entrega->tcc->orientador_id === $user->orientador->id) {
+        if ($user->funcao === 'orientador' && $user->orientador
+            && $entrega->tcc->orientador_id === $user->orientador->id) {
             return;
         }
 
-        if (!$editar && $user->funcao === 'membro_banca' && $entrega->tcc->banca?->membros()->where('user_id', $user->id)->exists()) {
+        if ($user->funcao === 'membro_banca'
+            && $entrega->tcc->banca?->membros()->where('user_id', $user->id)->exists()) {
             return;
         }
 
-        abort(403);
-    }
-
-    private function autorizarValidacao(?Entrega $entrega): void
-    {
-        if (!$entrega || !$entrega->tcc) { abort(404); }
-        $user = Auth::user();
-
-        if ($user->funcao === 'admin') { return; }
-        if ($user->funcao === 'orientador' && $user->orientador && $entrega->tcc->orientador_id === $user->orientador->id) { return; }
-
-        abort(403, 'Somente admin ou orientador do TCC pode validar arquivo.');
+        abort(403, 'Você não tem permissão para acessar este arquivo.');
     }
 
     private function entregasPermitidasParaFormulario()
@@ -182,17 +209,11 @@ class ArquivoEntregaController extends Controller
     private function registrarHistorico(Entrega $entrega, string $observacao): void
     {
         HistoricoTcc::create([
-            'tcc_id' => $entrega->tcc_id,
-            'alterado_por' => Auth::id(),
+            'tcc_id'          => $entrega->tcc_id,
+            'alterado_por'    => Auth::id(),
             'status_anterior' => $entrega->tcc?->status,
-            'status_novo' => $entrega->tcc?->status,
-            'observacao' => $observacao,
+            'status_novo'     => $entrega->tcc?->status,
+            'observacao'      => $observacao,
         ]);
-    }
-
-    private function rota(string $adminRoute): string
-    {
-        // Mantém a rota global para evitar RouteNotFoundException.
-        return $adminRoute;
     }
 }

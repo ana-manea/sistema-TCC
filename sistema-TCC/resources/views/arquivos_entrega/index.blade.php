@@ -9,13 +9,14 @@
         'validado'  => 'success',
         'rejeitado' => 'danger',
     ];
+    $funcao = auth()->user()->funcao;
 @endphp
 
 <div class="d-flex justify-content-between align-items-start mb-3">
     @include('layouts.voltar_titulo', [
-        'rota' => 'dashboard',
+        'rota'        => 'dashboard',
         'pagAnterior' => 'ao Dashboard',
-        'pagAtual' => 'Arquivos de Entrega'
+        'pagAtual'    => 'Arquivos de Entrega'
     ])
 
     <div>
@@ -72,16 +73,19 @@
                                 <i class="bi bi-pencil-square"></i> Editar
                             </a>
 
-                            <form class="d-inline"
-                                action="{{ route('arquivos_entrega.destroy', $arquivo) }}"
-                                method="POST"
-                                onsubmit="return confirm('Deseja excluir este arquivo?')">
-                                @csrf
-                                @method('DELETE')
-                                <button class="btn btn-sm btn-outline-danger" type="submit">
-                                    <i class="bi bi-trash"></i> Excluir
-                                </button>
-                            </form>
+                            {{-- Excluir: somente admin (controller bloqueia os demais com 403) --}}
+                            @if($funcao === 'admin')
+                                <form class="d-inline"
+                                    action="{{ route('arquivos_entrega.destroy', $arquivo) }}"
+                                    method="POST"
+                                    onsubmit="return confirm('Deseja excluir este arquivo?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">
+                                        <i class="bi bi-trash"></i> Excluir
+                                    </button>
+                                </form>
+                            @endif
                         </td>
                     </tr>
                     @endforeach
