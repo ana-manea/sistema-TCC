@@ -6,6 +6,7 @@ use App\Models\Feedback;
 use App\Models\Tcc;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class FeedbackController extends Controller
 {
@@ -66,7 +67,7 @@ class FeedbackController extends Controller
         return view('feedbacks.index', [
             'feedbacks' => $feedbacks,
             'modo' => 'orientando',
-            'tccId'     => $tccId,
+            'tccId'     => $tccIds,
         ]);
     }
 
@@ -80,7 +81,7 @@ class FeedbackController extends Controller
         // Se o valor estiver nulo, o formulário não saberá qual TCC está recebendo o feedback
         if (!$tccId) {
             // Log para ajudar a debugar
-            \Log::error('Tentativa de criar feedback sem tcc_id');
+            Log::error('Tentativa de criar feedback sem tcc_id');
             return redirect()->back()->withErrors(['msg' => 'TCC não identificado.']);
         }
 

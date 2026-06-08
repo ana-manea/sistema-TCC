@@ -16,6 +16,7 @@ use App\Http\Controllers\ReuniaoController;
 use App\Http\Controllers\TarefaController;
 use App\Http\Controllers\TccController;
 use App\Http\Controllers\SolicitacaoOrientadorController;
+use App\Http\Controllers\FeedbackController;
 use App\Models\Orientador;
 
 // Sem autenticação
@@ -76,6 +77,9 @@ Route::get('/tccs/em-andamento', [TccController::class, 'emAndamento'])
     ->name('tccs.em_andamento');
 
 Route::resource('tccs', TccController::class);
+
+Route::resource('feedbacks', FeedbackController::class);
+Route::get('/aluno/feedbacks', [FeedbackController::class, 'indexOrientando'])->name('aluno.feedbacks.index');
 
 Route::resource('tarefas', TarefaController::class)->except(['show']);
 Route::get('/aluno/tarefas', [TarefaController::class, 'indexOrientando'])
