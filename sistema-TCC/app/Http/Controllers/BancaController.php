@@ -7,6 +7,7 @@ use App\Models\Banca;
 use App\Models\BancaMembro;
 use App\Models\Tcc;
 use App\Models\User;
+use App\Notifications\BancaAgendadaNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -24,12 +25,16 @@ class BancaController extends Controller
 
         $query = Banca::with(['tcc.orientador.user', 'tcc.orientandos.user', 'membros.user', 'avaliacoes']);
 
-        if ($usuarioLogado->funcao === 'orientador' && $usuarioLogado->orientador) {
+        if ($usuarioLogado->funcao === 'admin') {
+            // Admin visualiza todas as bancas.
+        } elseif ($usuarioLogado->funcao === 'orientador' && $usuarioLogado->orientador) {
             $query->whereHas('tcc', fn ($q) => $q->where('orientador_id', $usuarioLogado->orientador->id));
         } elseif ($usuarioLogado->funcao === 'orientando' && $usuarioLogado->orientando) {
             $query->whereHas('tcc.orientandos', fn ($q) => $q->where('orientandos.id', $usuarioLogado->orientando->id));
         } elseif ($usuarioLogado->funcao === 'membro_banca') {
             $query->whereHas('membros', fn ($q) => $q->where('user_id', $usuarioLogado->id));
+        } else {
+            $query->whereRaw('1 = 0');
         }
 
         if ($statusFiltro) {
@@ -129,6 +134,8 @@ class BancaController extends Controller
         BancaMembro::create(['banca_id' => $banca->id, 'user_id' => $request->presidente_id,     'papel' => 'presidente']);
         BancaMembro::create(['banca_id' => $banca->id, 'user_id' => $request->membro_interno_id, 'papel' => 'membro_interno']);
         BancaMembro::create(['banca_id' => $banca->id, 'user_id' => $request->membro_externo_id, 'papel' => 'membro_externo']);
+
+        $this->notificarBanca($banca->fresh());
 
         return redirect()->route('bancas.index')->with('sucesso', 'Banca agendada com sucesso!');
     }
@@ -235,6 +242,8 @@ class BancaController extends Controller
         BancaMembro::create(['banca_id' => $banca->id, 'user_id' => $request->presidente_id,     'papel' => 'presidente']);
         BancaMembro::create(['banca_id' => $banca->id, 'user_id' => $request->membro_interno_id, 'papel' => 'membro_interno']);
         BancaMembro::create(['banca_id' => $banca->id, 'user_id' => $request->membro_externo_id, 'papel' => 'membro_externo']);
+
+        $this->notificarBanca($banca->fresh());
 
         return redirect()->route('bancas.index')->with('sucesso', 'Banca atualizada com sucesso!');
     }
@@ -391,18 +400,9 @@ class BancaController extends Controller
             'avaliacoes.avaliador',
         ]);
 
-        $usuarioLogado = Auth::user();
-
-        // Verifica se o usuário tem permissão de ver a ata
-        $eMembroDaBanca = $banca->membros->contains('user_id', $usuarioLogado->id);
-        $eOrientando    = optional($usuarioLogado)->funcao === 'orientando';
-        $eOrientador    = optional($usuarioLogado)->funcao === 'orientador';
-        $eAdmin         = optional($usuarioLogado)->funcao === 'admin';
-
-        if (!$eMembroDaBanca && !$eOrientando && !$eOrientador && !$eAdmin) {
-            return redirect()->route('bancas.index')
-                ->with('erro', 'Acesso negado. Você não tem permissão para visualizar esta ata.');
-        }
+        // Reaproveita a mesma regra de visualização da banca:
+        // admin, orientador/orientando vinculados ao TCC e membros participantes.
+        $this->autorizarVisualizacao($banca);
 
         return view('bancas.ata', compact('banca'));
     }
@@ -439,5 +439,33 @@ class BancaController extends Controller
         }
 
         abort(403, 'Você não tem permissão para visualizar esta banca.');
+    }
+    private function notificarBanca(?Banca $banca): void
+    {
+        if (!$banca) {
+            return;
+        }
+
+        $banca->loadMissing(['tcc.orientador.user', 'tcc.orientandos.user', 'membros.user']);
+
+        $destinatarios = collect();
+
+        if ($banca->tcc?->orientador?->user) {
+            $destinatarios->push($banca->tcc->orientador->user);
+        }
+
+        foreach ($banca->tcc?->orientandos ?? [] as $orientando) {
+            if ($orientando->user) {
+                $destinatarios->push($orientando->user);
+            }
+        }
+
+        foreach ($banca->membros as $membro) {
+            if ($membro->user) {
+                $destinatarios->push($membro->user);
+            }
+        }
+
+        $destinatarios->unique('id')->each(fn ($usuario) => $usuario->notify(new BancaAgendadaNotification($banca)));
     }
 }

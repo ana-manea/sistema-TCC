@@ -162,12 +162,16 @@ class EntregaController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->funcao === 'orientador' && $user->orientador) {
+        if ($user->funcao === 'admin') {
+            return;
+        } elseif ($user->funcao === 'orientador' && $user->orientador) {
             $query->where('orientador_id', $user->orientador->id);
         } elseif ($user->funcao === 'orientando' && $user->orientando) {
             $query->whereHas('orientandos', fn ($q) => $q->where('orientandos.id', $user->orientando->id));
         } elseif ($user->funcao === 'membro_banca') {
             $query->whereHas('banca.membros', fn ($q) => $q->where('user_id', $user->id));
+        } else {
+            $query->whereRaw('1 = 0');
         }
     }
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Reuniao;
 use App\Models\Tcc;
+use App\Notifications\ReuniaoAgendadaNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -17,13 +18,17 @@ class ReuniaoController extends Controller
         $query = Reuniao::with(['tcc.orientador.user', 'tcc.orientandos.user'])
             ->latest('data_hora');
 
-        if ($user && $user->funcao === 'orientador' && $user->orientador) {
+        if ($user && $user->funcao === 'admin') {
+            // Admin visualiza todas.
+        } elseif ($user && $user->funcao === 'orientador' && $user->orientador) {
             $query->whereHas('tcc', function ($tccQuery) use ($user) {
                 $tccQuery->where('orientador_id', $user->orientador->id);
             });
         } elseif ($user && $user->funcao === 'orientando' && $user->orientando) {
             $tccIds = $user->orientando->tccs()->pluck('tccs.id');
             $query->whereIn('tcc_id', $tccIds);
+        } else {
+            $query->whereRaw('1 = 0');
         }
 
         $reunioes = $query->get();
@@ -38,6 +43,10 @@ class ReuniaoController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
         $orientador = $user->orientador;
+
+        if (!$orientador) {
+            abort(403, 'Seu usuário não possui perfil de orientador vinculado.');
+        }
 
         $reunioes = Reuniao::with('tcc')
             ->whereHas('tcc', fn($q) => $q->where('orientador_id', $orientador->id))
@@ -56,6 +65,10 @@ class ReuniaoController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
         $orientando = $user->orientando;
+
+        if (!$orientando) {
+            abort(403, 'Seu usuário não possui perfil de orientando vinculado.');
+        }
 
         $reunioes = Reuniao::with('tcc')
             ->whereHas('tcc.orientandos', fn($q) => $q->where('orientandos.id', $orientando->id))
@@ -82,6 +95,8 @@ class ReuniaoController extends Controller
             ->when($user->funcao === 'orientador' && $user->orientador, function ($query) use ($user) {
                 $query->where('orientador_id', $user->orientador->id);
             })
+            ->when($user->funcao === 'orientador' && !$user->orientador, fn ($query) => $query->whereRaw('1 = 0'))
+            ->when($user->funcao === 'orientador' && !$user->orientador, fn ($query) => $query->whereRaw('1 = 0'))
             ->with(['orientador.user', 'orientandos.user'])
             ->orderBy('tema')
             ->get();
@@ -134,7 +149,22 @@ class ReuniaoController extends Controller
             'status'   => 'required|in:agendada,realizada,cancelada',
         ]);
 
-        Reuniao::create($dados);
+        $tcc = Tcc::findOrFail($dados['tcc_id']);
+        $this->autorizarGerenciarTcc($tcc);
+
+        $reuniao = Reuniao::create($dados);
+        $reuniao->load(['tcc.orientador.user', 'tcc.orientandos.user']);
+
+        $destinatarios = collect();
+        if ($reuniao->tcc?->orientador?->user) {
+            $destinatarios->push($reuniao->tcc->orientador->user);
+        }
+        foreach ($reuniao->tcc?->orientandos ?? [] as $orientando) {
+            if ($orientando->user) {
+                $destinatarios->push($orientando->user);
+            }
+        }
+        $destinatarios->unique('id')->each(fn ($usuario) => $usuario->notify(new ReuniaoAgendadaNotification($reuniao)));
 
         return redirect()->route('reunioes.index')
             ->with('sucesso', 'Reunião cadastrada com sucesso!');
@@ -157,6 +187,7 @@ class ReuniaoController extends Controller
             ->when($user->funcao === 'orientador' && $user->orientador, function ($query) use ($user) {
                 $query->where('orientador_id', $user->orientador->id);
             })
+            ->when($user->funcao === 'orientador' && !$user->orientador, fn ($query) => $query->whereRaw('1 = 0'))
             ->orderBy('tema')
             ->get();
 
@@ -185,6 +216,9 @@ class ReuniaoController extends Controller
             'status'          => 'required|in:agendada,realizada,cancelada',
         ]);
 
+        $novoTcc = Tcc::findOrFail($dados['tcc_id']);
+        $this->autorizarGerenciarTcc($novoTcc);
+
         $reuniao->update($dados);
 
         return redirect()->route('reunioes.index')
@@ -208,5 +242,24 @@ class ReuniaoController extends Controller
 
         return redirect()->route('reunioes.index')
             ->with('sucesso', 'Reunião excluída com sucesso!');
+    }
+
+    private function autorizarGerenciarTcc(?Tcc $tcc): void
+    {
+        if (!$tcc) {
+            abort(404);
+        }
+
+        $user = Auth::user();
+
+        if ($user->funcao === 'admin') {
+            return;
+        }
+
+        if ($user->funcao === 'orientador' && $user->orientador && (int) $tcc->orientador_id === (int) $user->orientador->id) {
+            return;
+        }
+
+        abort(403, 'Você não tem permissão para gerenciar reuniões deste TCC.');
     }
 }

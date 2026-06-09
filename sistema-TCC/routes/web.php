@@ -123,6 +123,7 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::resource('orientadores', OrientadorController::class)
+        ->except(['create', 'store'])
         ->parameters(['orientadores' => 'orientador']);
 
     /*

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\SolicitacaoOrientador;
 use App\Models\Orientador;
+use App\Notifications\NovaSolicitacaoOrientadorNotification;
+use App\Notifications\SolicitacaoOrientadorRespondidaNotification;
 use Illuminate\Http\Request;
 
 class SolicitacaoOrientadorController extends Controller
@@ -141,11 +143,16 @@ class SolicitacaoOrientadorController extends Controller
                 ]);
         }
 
-        SolicitacaoOrientador::create([
+        $solicitacao = SolicitacaoOrientador::create([
             'orientando_id' => $orientando->id,
             'orientador_id' => $dados['orientador_id'],
             'mensagem'      => $dados['mensagem'],
         ]);
+
+        $solicitacao->load(['orientador.user', 'orientando.user']);
+        if ($solicitacao->orientador?->user) {
+            $solicitacao->orientador->user->notify(new NovaSolicitacaoOrientadorNotification($solicitacao));
+        }
 
         return redirect()
             ->route('solicitacoes_orientando.index')
@@ -186,6 +193,11 @@ class SolicitacaoOrientadorController extends Controller
                     'orientador_id' => $solicitacaoOrientador->orientador_id
                 ]);
             }
+        }
+
+        $solicitacaoOrientador->load(['orientador.user', 'orientando.user']);
+        if ($solicitacaoOrientador->orientando?->user) {
+            $solicitacaoOrientador->orientando->user->notify(new SolicitacaoOrientadorRespondidaNotification($solicitacaoOrientador));
         }
 
         $mensagem = $request->status === 'aceita'

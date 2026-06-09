@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Orientador;
 use App\Models\Orientando;
+use App\Notifications\ContaCriadaNotification;
+use App\Notifications\SenhaAlteradaNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -67,6 +69,10 @@ class UserController extends Controller
             ]);
         }
 
+        if ($request->filled('password')) {
+            $user->notify(new SenhaAlteradaNotification());
+        }
+
         return redirect()
             ->route('users.perfil')
             ->with('sucesso', 'Perfil atualizado com sucesso!');
@@ -74,6 +80,7 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
+        $this->autorizarAdmin();
         $query = User::latest();
 
         if ($request->filled('funcao')) {
@@ -87,6 +94,7 @@ class UserController extends Controller
 
     public function create(Request $request)
     {
+        $this->autorizarAdmin();
         $funcao = 'users';
 
         if ($request->filled('funcao')) {
@@ -99,6 +107,7 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
+        $this->autorizarAdmin();
         $dados = $request->validate([
             'name'     => ['required', 'string', 'max:255'],
             'email'    => ['required', 'email','max:255', 'unique:users,email'],
@@ -146,6 +155,8 @@ class UserController extends Controller
             ]);
         }
 
+        $user->notify(new ContaCriadaNotification($dados['password'], $dados['funcao']));
+
         return redirect()
             ->route('users.index')
             ->with('sucesso', 'Registro cadastrado com sucesso!');
@@ -153,6 +164,7 @@ class UserController extends Controller
 
     public function show(User $user)
     {
+        $this->autorizarAdmin();
         return view('users.show', compact('user'));
     }
 
@@ -160,6 +172,7 @@ class UserController extends Controller
     {
         /** @var \App\Models\User $authUser */
         $authUser = Auth::user();
+        $this->autorizarAdmin();
 
         if (
             $authUser->funcao === 'admin'
@@ -180,6 +193,7 @@ class UserController extends Controller
     {
         /** @var \App\Models\User $authUser */
         $authUser = Auth::user();
+        $this->autorizarAdmin();
 
         // Admin não pode editar a si próprio nem outro admin.
         if (
@@ -270,6 +284,10 @@ class UserController extends Controller
             }
         }
 
+        if ($request->filled('password')) {
+            $user->notify(new SenhaAlteradaNotification());
+        }
+
         return redirect()
             ->route('users.index')
             ->with('sucesso', 'Registro atualizado com sucesso!');
@@ -279,6 +297,7 @@ class UserController extends Controller
     {
         /** @var \App\Models\User $authUser */
         $authUser = Auth::user();
+        $this->autorizarAdmin();
 
         // Admin não pode excluir a si próprio nem outro admin.
         if (
@@ -298,5 +317,12 @@ class UserController extends Controller
         return redirect()
             ->route('users.index')
             ->with('sucesso', 'Registro removido com sucesso!');
+    }
+
+    private function autorizarAdmin(): void
+    {
+        if (Auth::user()?->funcao !== 'admin') {
+            abort(403, 'Somente administradores podem acessar este recurso.');
+        }
     }
 }

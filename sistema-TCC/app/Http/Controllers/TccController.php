@@ -20,12 +20,21 @@ class TccController extends Controller
     {
         $user = Auth::user();
 
-        $tccs = Tcc::with(['orientador.user', 'orientandos.user', 'banca'])
-            ->when($user->funcao === 'orientador' && $user->orientador, fn ($q) => $q->where('orientador_id', $user->orientador->id))
-            ->when($user->funcao === 'orientando' && $user->orientando, fn ($q) => $q->whereHas('orientandos', fn ($oq) => $oq->where('orientandos.id', $user->orientando->id)))
-            ->when($user->funcao === 'membro_banca', fn ($q) => $q->whereHas('banca.membros', fn ($mq) => $mq->where('user_id', $user->id)))
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $query = Tcc::with(['orientador.user', 'orientandos.user', 'banca']);
+
+        if ($user->funcao === 'admin') {
+            // Admin visualiza todos.
+        } elseif ($user->funcao === 'orientador' && $user->orientador) {
+            $query->where('orientador_id', $user->orientador->id);
+        } elseif ($user->funcao === 'orientando' && $user->orientando) {
+            $query->whereHas('orientandos', fn ($oq) => $oq->where('orientandos.id', $user->orientando->id));
+        } elseif ($user->funcao === 'membro_banca') {
+            $query->whereHas('banca.membros', fn ($mq) => $mq->where('user_id', $user->id));
+        } else {
+            $query->whereRaw('1 = 0');
+        }
+
+        $tccs = $query->orderBy('created_at', 'desc')->get();
 
         return view('tccs.index', compact('tccs'));
     }
@@ -39,6 +48,10 @@ class TccController extends Controller
 
         if (!in_array($user->funcao, ['admin', 'orientando'], true)) {
             abort(403, 'Apenas administrador ou orientando podem criar TCC.');
+        }
+
+        if ($user->funcao === 'orientando' && !$user->orientando) {
+            abort(403, 'Seu usuário não possui perfil de orientando vinculado.');
         }
 
         $orientadores = Orientador::with('user')->get();
@@ -56,6 +69,10 @@ class TccController extends Controller
 
         if (!in_array($user->funcao, ['admin', 'orientando'], true)) {
             abort(403, 'Apenas administrador ou orientando podem criar TCC.');
+        }
+
+        if ($user->funcao === 'orientando' && !$user->orientando) {
+            abort(403, 'Seu usuário não possui perfil de orientando vinculado.');
         }
 
         $dados = $request->validate([
@@ -179,13 +196,21 @@ class TccController extends Controller
             abort(403, 'Membros da banca não acessam a lista de TCCs em andamento.');
         }
 
-        $tccs = Tcc::with(['orientador.user', 'orientandos.user'])
+        $query = Tcc::with(['orientador.user', 'orientandos.user'])
             ->withCount(['tarefas', 'entregas', 'reunioes'])
-            ->where('status', 'em_andamento')
-            ->when($user->funcao === 'orientador' && $user->orientador, fn ($q) => $q->where('orientador_id', $user->orientador->id))
-            ->when($user->funcao === 'orientando' && $user->orientando, fn ($q) => $q->whereHas('orientandos', fn ($oq) => $oq->where('orientandos.id', $user->orientando->id)))
-            ->orderBy('created_at', 'desc')
-            ->get();
+            ->where('status', 'em_andamento');
+
+        if ($user->funcao === 'admin') {
+            // Admin visualiza todos os TCCs em andamento.
+        } elseif ($user->funcao === 'orientador' && $user->orientador) {
+            $query->where('orientador_id', $user->orientador->id);
+        } elseif ($user->funcao === 'orientando' && $user->orientando) {
+            $query->whereHas('orientandos', fn ($oq) => $oq->where('orientandos.id', $user->orientando->id));
+        } else {
+            $query->whereRaw('1 = 0');
+        }
+
+        $tccs = $query->orderBy('created_at', 'desc')->get();
 
         return view('tccs.em_andamento', compact('tccs'));
     }

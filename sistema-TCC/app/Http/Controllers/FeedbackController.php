@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Feedback;
 use App\Models\Tcc;
+use App\Notifications\FeedbackRecebidoNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -118,7 +119,14 @@ class FeedbackController extends Controller
 
         $dados['orientador_id'] = $user->orientador->id;
 
-        Feedback::create($dados);
+        $feedback = Feedback::create($dados);
+        $feedback->load(['tcc.orientandos.user', 'orientador.user']);
+
+        foreach ($feedback->tcc?->orientandos ?? [] as $orientando) {
+            if ($orientando->user) {
+                $orientando->user->notify(new FeedbackRecebidoNotification($feedback));
+            }
+        }
 
         return redirect()
             ->route('tccs.show', $dados['tcc_id'])
