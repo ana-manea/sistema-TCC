@@ -3,20 +3,19 @@
 @section('title', 'Ata da Banca')
 
 @section('content')
-    <div class="d-flex align-items-center justify-content-between mb-3">
-        <div>
-            <h1 class="h3 mb-0">Ata da Banca</h1>
-            <small class="text-muted">{{ $banca->tcc->tema ?? 'TCC #' . $banca->tcc_id }}</small>
-        </div>
+    <div class="d-flex align-items-start justify-content-between mb-3">
+        @include('layouts.voltar_titulo', [
+            'rota' => 'bancas.show', 
+            'variavel' => $banca,
+            'pagAnterior' => 'aos Detalhes',
+            'pagAtual' => 'Ata da Banca',
+            'descricao' => $banca->tcc->tema ?? 'TCC #' . $banca->tcc_id
+        ])
 
-        <div class="d-flex gap-2">
+        <div>
             <button class="btn btn-outline-secondary" onclick="window.print()">
                 <i class="bi bi-printer"></i> Imprimir
             </button>
-
-            <a href="{{ route('bancas.show', $banca) }}" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i> Voltar
-            </a>
         </div>
     </div>
 

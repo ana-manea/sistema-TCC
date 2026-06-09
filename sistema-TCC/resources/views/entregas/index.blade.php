@@ -16,16 +16,20 @@
 @endphp
 
 <div class="container-fluid py-4">
-    <div class="d-flex align-items-center justify-content-between mb-3">
-        <h1 class="h3 mb-0">
-            <i class="bi bi-box-seam"></i> Controle de Entregas
-        </h1>
+    <div class="d-flex align-items-start justify-content-between mb-3">
+        @include('layouts.voltar_titulo', [
+            'rota' => 'dashboard',
+            'pagAnterior' => 'ao Dashboard',
+            'pagAtual' => 'Controle de Entregas'
+        ])
 
-        @if($modoAtual === 'orientador')
-            <a class="btn btn-primary" href="{{ route('entregas.create') }}">
-                <i class="bi bi-plus-circle"></i> Nova Entrega
-            </a>
-        @endif
+        <div>
+            @if($modoAtual === 'orientador')
+                <a class="btn btn-primary" href="{{ route('entregas.create') }}">
+                    <i class="bi bi-plus-circle"></i> Nova Entrega
+                </a>
+            @endif
+        </div>
     </div>
 
     <div class="card shadow-sm">
