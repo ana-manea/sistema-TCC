@@ -6,8 +6,12 @@
 @php($modoAtual = $modo ?? 'orientador')
 
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-chat-left-text"></i> {{ $modoAtual === 'orientando' ? 'Feedbacks Recebidos' : 'Meus Feedbacks' }}</h2>
+    <div class="d-flex align-items-start justify-content-between mb-3">
+            @include('layouts.voltar_titulo', [
+                'rota' => 'dashboard',
+                'pagAnterior' => 'ao Dashboard',
+                'pagAtual' => $modoAtual === 'orientando' ? 'Feedbacks Recebidos' : 'Meus Feedbacks'
+            ])
     </div>
 
     <div class="card shadow-sm">
